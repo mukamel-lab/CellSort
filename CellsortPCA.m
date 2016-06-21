@@ -115,9 +115,9 @@ end
 
 % Create covariance matrix
 if nt < npix
-    [covmat1, mov, movm, movtm] = create_tcov(fn, pixw, pixh, useframes, nt, dsamp);
+    [covmat, mov, movm, movtm] = create_tcov(fn, pixw, pixh, useframes, nt, dsamp);
 else
-    [covmat2, mov, movm, movtm] = create_xcov(fn, pixw, pixh, useframes, nt, dsamp);
+    [covmat, mov, movm, movtm] = create_xcov(fn, pixw, pixh, useframes, nt, dsamp);
 end
 
 covtrace = trace(covmat) / npix;
