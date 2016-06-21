@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CellsortFindspikes</title>
+  <meta name="keywords" content="CellsortFindspikes">
+  <meta name="description" content="[spmat, spt, spc, zsig] = CellsortFindspikes(ica_sig, thresh, dt, deconvtau, normalization)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div>  <a href="index.html">CellSort 1.0</a> &gt; CellsortFindspikes.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="images/left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for CellSort 1.0&nbsp;<img alt=">" border="0" src="images/right.png"></a></td></tr></table>-->
+
+<h1>CellsortFindspikes
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>[spmat, spt, spc, zsig] = CellsortFindspikes(ica_sig, thresh, dt, deconvtau, normalization)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>function [spmat, spt, spc] = CellsortFindspikes(ica_sig, thresh, dt, deconvtau, normalization) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre class="comment"> [spmat, spt, spc, zsig] = CellsortFindspikes(ica_sig, thresh, dt, deconvtau, normalization)
+
+ CELLSORT
+  Deconvolve signal and find spikes using a threshold
+
+ Inputs:
+   ica_sig - nIC x T matrix of ICA temporal signals
+   thresh - threshold for spike detection
+   dt - time step
+   deconvtau - time constant for temporal deconvolution (Butterworth
+   filter); if deconvtau=0 or [], no deconvolution is performed
+   normalization - type of normalization to apply to ica_sig; 0 - no
+   normalization; 1 - divide by standard deviation and subtract mean
+
+ Outputs:
+   spmat - nIC x T sparse binary matrix, containing 1 at the time frame of each
+   spike
+   spt - list of all spike times
+   spc - list of the indices of cells for each spike
+
+ Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009
+ Email: eran@post.harvard.edu, mschnitz@stanford.edu</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [spmat, spt, spc] = CellsortFindspikes(ica_sig, thresh, dt, deconvtau, normalization)</a>
+0002 <span class="comment">% [spmat, spt, spc, zsig] = CellsortFindspikes(ica_sig, thresh, dt, deconvtau, normalization)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% CELLSORT</span>
+0005 <span class="comment">%  Deconvolve signal and find spikes using a threshold</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Inputs:</span>
+0008 <span class="comment">%   ica_sig - nIC x T matrix of ICA temporal signals</span>
+0009 <span class="comment">%   thresh - threshold for spike detection</span>
+0010 <span class="comment">%   dt - time step</span>
+0011 <span class="comment">%   deconvtau - time constant for temporal deconvolution (Butterworth</span>
+0012 <span class="comment">%   filter); if deconvtau=0 or [], no deconvolution is performed</span>
+0013 <span class="comment">%   normalization - type of normalization to apply to ica_sig; 0 - no</span>
+0014 <span class="comment">%   normalization; 1 - divide by standard deviation and subtract mean</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% Outputs:</span>
+0017 <span class="comment">%   spmat - nIC x T sparse binary matrix, containing 1 at the time frame of each</span>
+0018 <span class="comment">%   spike</span>
+0019 <span class="comment">%   spt - list of all spike times</span>
+0020 <span class="comment">%   spc - list of the indices of cells for each spike</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">% Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009</span>
+0023 <span class="comment">% Email: eran@post.harvard.edu, mschnitz@stanford.edu</span>
+0024 
+0025 <span class="keyword">if</span> size(ica_sig,2)==1
+0026     ica_sig = ica_sig';
+0027 <span class="keyword">end</span>
+0028 
+0029 <span class="keyword">if</span> (nargin&gt;=3)&amp;&amp;(deconvtau&gt;0)
+0030     dsig = diff(ica_sig,1,2);
+0031     sig = ica_sig/deconvtau + [dsig(:,1),dsig]/dt;
+0032 <span class="keyword">else</span>
+0033     sig = ica_sig;
+0034 <span class="keyword">end</span>
+0035 
+0036 <span class="keyword">if</span> (nargin&lt;2)
+0037     thresh=3;
+0038     fprintf(<span class="string">'Using threshold = 3 s.d. \n'</span>)
+0039 <span class="keyword">end</span>
+0040 <span class="keyword">switch</span> normalization
+0041     <span class="keyword">case</span> 0 <span class="comment">% Absolute units</span>
+0042         zsig = sig';
+0043     <span class="keyword">case</span> 1 <span class="comment">% Standard-deviation</span>
+0044         zsig = zscore(sig');
+0045 <span class="keyword">end</span>
+0046 pp1=[zsig(1,:);zsig(1:end-1,:)];
+0047 pp2=[zsig(2:<span class="keyword">end</span>,:);zsig(<span class="keyword">end</span>,:)];
+0048 spmat = sparse((zsig&gt;=thresh)&amp;(zsig-pp1&gt;=0)&amp;(zsig-pp2&gt;=0));
+0049 
+0050 <span class="keyword">if</span> nargout&gt;1
+0051     [spt,spc] = find(spmat);
+0052     spt = spt*dt;
+0053 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Wed 29-Jul-2009 12:46:53 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

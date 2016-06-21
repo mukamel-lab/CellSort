@@ -1,0 +1,489 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CellsortICAplot</title>
+  <meta name="keywords" content="CellsortICAplot">
+  <meta name="description" content="CellsortICAplot(mode, ica_filters, ica_sig, f0, tlims, dt, ratebin, plottype, ICuse, spt, spc)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div> <a href="index.html">CellSort 1.0</a> &gt; CellsortICAplot.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="images/left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for CellSort 1.0&nbsp;<img alt=">" border="0" src="images/right.png"></a></td></tr></table>-->
+
+<h1>CellsortICAplot
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>CellsortICAplot(mode, ica_filters, ica_sig, f0, tlims, dt, ratebin, plottype, ICuse, spt, spc)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>function CellsortICAplot(mode, ica_filters, ica_sig, f0, tlims, dt, ratebin, plottype, ICuse, spt, spc) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre class="comment"> CellsortICAplot(mode, ica_filters, ica_sig, f0, tlims, dt, ratebin, plottype, ICuse, spt, spc)
+
+ Display the results of ICA analysis in the form of paired spatial filters
+ and signal time courses
+
+ Inputs:
+     mode - 'series' shows each spatial filter separately; 'contour'
+     displays a single plot with contours for all spatial filters
+     superimposed on the mean fluorescence image
+     ica_filters - nIC x X x Y array of ICA spatial filters
+     ica_sig - nIC x T matrix of ICA temporal signals
+     f0 - mean fluorescence image
+     tlims - 2-element vector specifying the range of times to be displayed
+     dt - time step corresponding to individual movie time frames
+     ratebin - size of time bins for spike rate computation
+     plottype - type of spike plot to use:
+         plottype = 1: plot cellular signals
+         plottype = 2: plot cellular signals together with spikes
+         plottype = 3: plot spikes only
+         plottype = 4: plot spike rate over time
+     ICuse - vector of indices of cells to be plotted
+     spt - vector of spike times (needed for plottype &gt; 1)
+     spc - vector of spike indices (which cell) (needed for plottype &gt; 1)
+
+ Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009
+ Email: eran@post.harvard.edu, mschnitz@stanford.edu</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function complot(sig, ICuse, dt)</a></li><li><a href="#_sub2" class="code">function formataxes</a></li><li><a href="#_sub3" class="code">function fout = gaussblur(fin, smpix)</a></li></ul>
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function CellsortICAplot(mode, ica_filters, ica_sig, f0, tlims, dt, ratebin, plottype, ICuse, spt, spc)</a>
+0002 <span class="comment">% CellsortICAplot(mode, ica_filters, ica_sig, f0, tlims, dt, ratebin, plottype, ICuse, spt, spc)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% Display the results of ICA analysis in the form of paired spatial filters</span>
+0005 <span class="comment">% and signal time courses</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Inputs:</span>
+0008 <span class="comment">%     mode - 'series' shows each spatial filter separately; 'contour'</span>
+0009 <span class="comment">%     displays a single plot with contours for all spatial filters</span>
+0010 <span class="comment">%     superimposed on the mean fluorescence image</span>
+0011 <span class="comment">%     ica_filters - nIC x X x Y array of ICA spatial filters</span>
+0012 <span class="comment">%     ica_sig - nIC x T matrix of ICA temporal signals</span>
+0013 <span class="comment">%     f0 - mean fluorescence image</span>
+0014 <span class="comment">%     tlims - 2-element vector specifying the range of times to be displayed</span>
+0015 <span class="comment">%     dt - time step corresponding to individual movie time frames</span>
+0016 <span class="comment">%     ratebin - size of time bins for spike rate computation</span>
+0017 <span class="comment">%     plottype - type of spike plot to use:</span>
+0018 <span class="comment">%         plottype = 1: plot cellular signals</span>
+0019 <span class="comment">%         plottype = 2: plot cellular signals together with spikes</span>
+0020 <span class="comment">%         plottype = 3: plot spikes only</span>
+0021 <span class="comment">%         plottype = 4: plot spike rate over time</span>
+0022 <span class="comment">%     ICuse - vector of indices of cells to be plotted</span>
+0023 <span class="comment">%     spt - vector of spike times (needed for plottype &gt; 1)</span>
+0024 <span class="comment">%     spc - vector of spike indices (which cell) (needed for plottype &gt; 1)</span>
+0025 <span class="comment">%</span>
+0026 <span class="comment">% Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009</span>
+0027 <span class="comment">% Email: eran@post.harvard.edu, mschnitz@stanford.edu</span>
+0028 <span class="comment">%</span>
+0029 
+0030 colord=[         0         0    1.0000
+0031     0    0.4000         0
+0032     1.0000         0         0
+0033     0    0.7500    0.7500
+0034     0.7500         0    0.7500
+0035     0.8, 0.5, 0
+0036     0         0    0.5
+0037     0         0.85      0];
+0038 
+0039 <span class="comment">% Check input arguments</span>
+0040 nIC = size(ica_sig,1);
+0041 <span class="keyword">if</span> nargin&lt;5 || isempty(tlims)
+0042     tlims = [0, size(ica_sig,2)*dt]; <span class="comment">% seconds</span>
+0043 <span class="keyword">end</span>
+0044 <span class="keyword">if</span> nargin&lt;8 || isempty(plottype)
+0045     plottype = 1;
+0046 <span class="keyword">end</span>
+0047 <span class="keyword">if</span> nargin&lt;9 || isempty(ICuse)
+0048     ICuse = [1:nIC];
+0049 <span class="keyword">end</span>
+0050 <span class="keyword">if</span> size(ICuse,2)==1
+0051     ICuse = ICuse';
+0052 <span class="keyword">end</span>
+0053 
+0054 <span class="comment">% Reshape the filters</span>
+0055 [pixw,pixh] = size(f0);
+0056 <span class="keyword">if</span> size(ica_filters,1)==nIC
+0057     ica_filters = reshape(ica_filters,nIC,pixw,pixh);
+0058 <span class="keyword">elseif</span> size(ica_filters,2)==nIC
+0059     ica_filters = reshape(ica_filters,nIC,pixw,pixh);
+0060 <span class="keyword">end</span>
+0061 
+0062 <span class="keyword">switch</span> mode
+0063     <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0064     <span class="keyword">case</span> {<span class="string">'series'</span>}
+0065         colmax = 20; <span class="comment">% Maximum # of ICs in one column</span>
+0066         ncols = ceil(length(ICuse)/colmax);
+0067         <span class="keyword">if</span> plottype==4
+0068             ncols=1;
+0069         <span class="keyword">end</span>
+0070         nrows = ceil(length(ICuse)/ncols);
+0071 
+0072         <span class="keyword">if</span> size(ica_filters(:,:,1))==size(f0(:,:,1))
+0073             ica_filters = permute(ica_filters,[3,1,2]);
+0074         <span class="keyword">end</span>
+0075 
+0076         subplot(1,3*ncols,[2:3])
+0077         tlims(2) = min(tlims(2),size(ica_sig,2)*dt);
+0078         tlims(1) = max(tlims(1),0);
+0079 
+0080         clf
+0081         f_pos = get(gcf,<span class="string">'Position'</span>);
+0082         f_pos(4) = max([f_pos(4),500,50*nrows]);
+0083         f_pos(3) = max(400*ncols,0.9*f_pos(4));
+0084 
+0085         colormap(hot)
+0086         colord=get(gca,<span class="string">'ColorOrder'</span>);
+0087         ll=0;
+0088         filtax = [];
+0089         <span class="keyword">if</span> ~isempty(ica_filters)
+0090             <span class="keyword">for</span> k=0:ncols-1
+0091                 jj=3*k;
+0092                 nrows_curr = min(nrows,length(ICuse)-k*nrows);
+0093                 <span class="keyword">for</span> j=1:nrows_curr
+0094                     filtax= [filtax,subplot(nrows_curr + (plottype==4),3*ncols, jj+1)];
+0095                     jj=jj+3*ncols;
+0096                     ll=ll+1;
+0097                     imagesc(squeeze(ica_filters(ICuse(ll),:,:)))
+0098                     axis image tight off
+0099                 <span class="keyword">end</span>
+0100             <span class="keyword">end</span>
+0101         <span class="keyword">end</span>
+0102 
+0103         ax = [];
+0104         <span class="keyword">for</span> j=0:ncols-1
+0105             ax(j+1)=subplot(1,3*ncols,3*j+[2:3]);
+0106             ICuseuse = ICuse([1+j*nrows:min(length(ICuse),(j+1)*nrows)]);
+0107             <span class="keyword">if</span> plottype&lt;=2
+0108                 <a href="#_sub1" class="code" title="subfunction complot(sig, ICuse, dt)">complot</a>(ica_sig, ICuseuse, dt)
+0109             <span class="keyword">end</span>
+0110             <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0111             <span class="keyword">if</span> plottype&gt;=2
+0112                 [spcICuse,spcord] = ismember(spc,ICuseuse);
+0113                 spc_curr = spcord(spcICuse&amp;(spt&lt;=tlims(2))&amp;(spt&gt;=tlims(1)));
+0114                 spt_curr = spt(spcICuse&amp;(spt&lt;=tlims(2))&amp;(spt&gt;=tlims(1)));
+0115                 alpha = diff(ylim)/length(ICuseuse);
+0116                 <span class="keyword">switch</span> plottype
+0117                     <span class="keyword">case</span> 2
+0118                         hold on
+0119                         scatter(spt_curr,-alpha*(spc_curr-1)+2,20,colord(mod(spc_curr-1,size(colord,1))+1,:),<span class="string">'o'</span>,<span class="string">'filled'</span>)
+0120                         hold off
+0121                     <span class="keyword">case</span> 3
+0122                         cla
+0123                         scatter(spt_curr,-alpha*(spc_curr-1)+0.4*alpha,20,colord(mod(spc_curr-1,size(colord,1))+1,:),<span class="string">'o'</span>,<span class="string">'filled'</span>)
+0124                         yticks=sort(-alpha*([1:length(ICuseuse)]-1)+0.4*alpha);
+0125                         yl = sort(-alpha*[length(ICuseuse)-1,-1]);
+0126                         set(gca,<span class="string">'YTick'</span>,yticks)
+0127                         set(gca,<span class="string">'YTicklabel'</span>,num2str(fliplr(ICuseuse)'),<span class="string">'YLim'</span>,yl)
+0128                         set(gca,<span class="string">'YLim'</span>,sort(-alpha*[length(ICuseuse)-1,-0.6]))
+0129 
+0130                     <span class="keyword">case</span> 4
+0131                         ax4=[];
+0132                         tvec = [ratebin/2:ratebin:size(ica_sig,2)*dt];
+0133                         binsize = ratebin*ones(size(tvec));
+0134                         binsize(end) = size(ica_sig,2)*dt-tvec(end-1)-ratebin/2;
+0135                         fprintf(<span class="string">'IC mean rate\n'</span>)
+0136                         sprm = []; sprs = [];
+0137                         <span class="keyword">for</span> jj=1:length(ICuseuse)
+0138                             sptj = spt_curr(spc_curr==jj);
+0139                             spn = hist(sptj,tvec);
+0140                             spr = spn./binsize;
+0141                             sperr = sqrt(spn)./binsize;
+0142 
+0143                             ax4(jj) = subplot(length(ICuseuse)+1,3,[3*jj-1,3*jj]);
+0144                             errorbar(tvec,spr,sperr,<span class="string">'Color'</span>,colord(mod(jj-1,size(colord,1))+1,:),<span class="string">'LineWidth'</span>,1)
+0145                             hold on
+0146                             bar(tvec,spr)
+0147                             hold off
+0148                             axis tight
+0149                             <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0150                             ylabel({[<span class="string">'IC'</span>,int2str(ICuseuse(jj))],[num2str(mean(spr),2),<span class="string">''</span>]})
+0151                             sprm(jj) = sum(spn)/sum(binsize);
+0152                             fprintf(<span class="string">'%3.3f\n'</span>, sprm(jj))
+0153                             box off
+0154 
+0155                         <span class="keyword">end</span>
+0156                         histax = subplot(length(ICuseuse)+1,3, 3*length(ICuseuse)+1);
+0157                         hist(sprm,[0:0.1:1])
+0158                         <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0159                         xlabel(<span class="string">'Spike rate (Hz)'</span>)
+0160                         ylabel(<span class="string">'# Cells'</span>)
+0161                         xlim([0,1])
+0162 
+0163                         spn = hist(spt_curr,tvec);
+0164                         spr = spn./(binsize*length(ICuseuse));
+0165                         sperr = sqrt(spn)./(binsize*length(ICuseuse));  <span class="comment">%Standard error for measurement of mean from Poisson process</span>
+0166 
+0167                         ax4(jj+1) = subplot(length(ICuseuse)+1,3,3*length(ICuseuse)+[2,3]);
+0168                         errorbar(tvec,spr,sperr,<span class="string">'k'</span>,<span class="string">'LineWidth'</span>,3)
+0169                         <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0170                         set(ax4,<span class="string">'XLim'</span>,tlims)
+0171                         set(ax4(1:jj-1),<span class="string">'XTick'</span>,[])
+0172                         ylabel({<span class="string">'Pop. mean'</span>,[num2str(mean(spr),2),<span class="string">' Hz'</span>]},<span class="string">'FontAngle'</span>,<span class="string">'i'</span>)
+0173                         fprintf(<span class="string">'Pop. ave\tPop. SD\n'</span>)
+0174                         fprintf(<span class="string">'%3.3f\t\t%3.3f\n'</span>, mean(sprm), std(sprm))
+0175                         xlabel(<span class="string">'Time (s)'</span>,<span class="string">'FontAngle'</span>,<span class="string">'i'</span>)
+0176                         box off
+0177                         ax(j+1) = ax4(1);
+0178                     <span class="keyword">case</span> 5
+0179                         <span class="comment">% Scatter plot of spikes, showing synchrony</span>
+0180                         cla
+0181                         [nsp, nsp_t] = hist(spt_curr, unique(spt_curr));
+0182                         nsp_t = nsp_t(nsp&gt;1);
+0183                         nsp = nsp(nsp&gt;1);
+0184                         <span class="keyword">for</span> jj = 1:length(nsp_t)
+0185                             plot( nsp_t(jj)*ones(nsp(jj),1), spc_curr(spt_curr==nsp_t(jj)), <span class="string">'o-'</span>, <span class="keyword">...</span>
+0186                                 <span class="string">'Color'</span>, colord(mod(nsp(jj)-2,size(colord,1))+1,:), <span class="string">'LineWidth'</span>, 2, <span class="string">'MarkerSize'</span>,10)
+0187                             hold on
+0188                         <span class="keyword">end</span>
+0189                         scatter(spt_curr,-spc_curr,20,colord(mod(spc_curr-1,size(colord,1))+1,:),<span class="string">'o'</span>,<span class="string">'filled'</span>)
+0190                         hold off
+0191                         yticks=sort([1:max(spc_curr)]);
+0192                         yl = sort([max(spc_curr)+1,min(spc_curr)-1]);
+0193                         set(gca,<span class="string">'YTick'</span>,yticks)
+0194                         set(gca,<span class="string">'YTicklabel'</span>,num2str(fliplr(ICuse)'),<span class="string">'YLim'</span>,yl)
+0195                 <span class="keyword">end</span>
+0196             <span class="keyword">end</span>
+0197             <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0198             xlabel(<span class="string">'Time (s)'</span>)
+0199             xlim(tlims)
+0200             yl = ylim;
+0201             drawnow
+0202         <span class="keyword">end</span>
+0203         set(gcf,<span class="string">'Color'</span>,<span class="string">'w'</span>,<span class="string">'PaperPositionMode'</span>,<span class="string">'auto'</span>)
+0204 
+0205         <span class="comment">%%%%</span>
+0206         <span class="comment">% Resize plots to appropriate size</span>
+0207         <span class="keyword">if</span> (plottype&lt;4)&amp;(length(ICuse)&gt;=3)
+0208             bigpos = get(ax(1),<span class="string">'Position'</span>);
+0209             aheight = 0.9*bigpos(4)/nrows;
+0210             <span class="keyword">for</span> k=1:length(filtax)
+0211                 axpos = get(filtax(k),<span class="string">'Position'</span>);
+0212                 axpos(3) = aheight;
+0213                 axpos(4) = aheight;
+0214                 set(filtax(k),<span class="string">'Position'</span>,axpos)
+0215             <span class="keyword">end</span>
+0216 
+0217             set(gcf,<span class="string">'Units'</span>,<span class="string">'normalized'</span>)
+0218             fpos = get(gcf,<span class="string">'Position'</span>);
+0219             <span class="keyword">for</span> j=1:ncols
+0220                 axpos = get(ax(j),<span class="string">'OuterPosition'</span>);
+0221                 filtpos = get(filtax(1+(j-1)*nrows),<span class="string">'Position'</span>);
+0222                 axpos(1) = filtpos(1) + filtpos(3)*1.1;
+0223                 set(ax(j),<span class="string">'OuterPosition'</span>,axpos,<span class="string">'ActivePositionProperty'</span>,<span class="string">'outerposition'</span>)
+0224                 axpos = get(ax(j),<span class="string">'Position'</span>);
+0225             <span class="keyword">end</span>
+0226             set(gcf,<span class="string">'Resize'</span>,<span class="string">'on'</span>,<span class="string">'Units'</span>,<span class="string">'characters'</span>)
+0227         <span class="keyword">end</span>
+0228 
+0229         <span class="keyword">for</span> j=1:ncols
+0230             ax = [ax,axes(<span class="string">'Position'</span>,get(ax(j),<span class="string">'Position'</span>),<span class="string">'XAxisLocation'</span>,<span class="string">'top'</span>,<span class="string">'Color'</span>,<span class="string">'none'</span>)];
+0231             <span class="keyword">if</span> plottype==4
+0232                 xt = get(ax4(end),<span class="string">'XTick'</span>);
+0233             <span class="keyword">else</span>
+0234                 xt = get(ax(j),<span class="string">'XTick'</span>);
+0235             <span class="keyword">end</span>
+0236             xlim(tlims)
+0237             <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0238             set(gca,<span class="string">'YTick'</span>,[],<span class="string">'XTick'</span>,xt,<span class="string">'XTickLabel'</span>,num2str(xt'/dt, <span class="string">'%15.0f'</span>))
+0239             xlabel(<span class="string">'Frame number'</span>)
+0240             axes(ax(j))
+0241             box on
+0242         <span class="keyword">end</span>
+0243         linkaxes(ax,<span class="string">'xy'</span>)
+0244 
+0245 
+0246         <span class="comment">%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</span>
+0247     <span class="keyword">case</span> {<span class="string">'contour'</span>}
+0248         f_pos = get(gcf,<span class="string">'Position'</span>);
+0249         <span class="keyword">if</span> f_pos(4)&gt;f_pos(3)
+0250             f_pos(4) = 0.5*f_pos(3);
+0251             set(gcf,<span class="string">'Position'</span>,f_pos);
+0252         <span class="keyword">end</span>
+0253         set(gcf,<span class="string">'Renderer'</span>,<span class="string">'zbuffer'</span>,<span class="string">'RendererMode'</span>,<span class="string">'manual'</span>)
+0254 
+0255         subplot(1,2,2)
+0256 
+0257         clf
+0258         colormap(gray)
+0259 
+0260         set(gcf,<span class="string">'DefaultAxesColorOrder'</span>,colord)
+0261         subplot(1,2,1)
+0262 
+0263         crange = [min(min(min(ica_filters(ICuse,:,:)))),max(max(max(ica_filters(ICuse,:,:))))];
+0264         contourlevel = crange(2) - diff(crange)*[1,1]*0.8;
+0265 
+0266         cla
+0267         <span class="keyword">if</span> ndims(f0)==2
+0268             imagesc(f0)
+0269         <span class="keyword">else</span>
+0270             image(f0)
+0271         <span class="keyword">end</span>
+0272         cax = caxis;
+0273         sigsm = 1;
+0274         shading flat
+0275         hold on
+0276         <span class="keyword">for</span> j=1:length(ICuse)
+0277             ica_filtersuse = <a href="#_sub3" class="code" title="subfunction fout = gaussblur(fin, smpix)">gaussblur</a>(squeeze(ica_filters(ICuse(j),:,:)), sigsm);
+0278             contour(ica_filtersuse, [1,1]*(mean(ica_filtersuse(:))+4*std(ica_filtersuse(:))), <span class="keyword">...</span>
+0279                 <span class="string">'Color'</span>,colord(mod(j-1,size(colord,1))+1,:),<span class="string">'LineWidth'</span>,2)
+0280         <span class="keyword">end</span>
+0281         <span class="keyword">for</span> j=1:length(ICuse)
+0282             ica_filtersuse = <a href="#_sub3" class="code" title="subfunction fout = gaussblur(fin, smpix)">gaussblur</a>(squeeze(ica_filters(ICuse(j),:,:)), sigsm);
+0283 
+0284             <span class="comment">% Write the number at the cell center</span>
+0285             [ypeak, xpeak] = find(ica_filtersuse == max(max(ica_filtersuse)),1);
+0286             text(xpeak,ypeak,num2str(j), <span class="string">'horizontalalignment'</span>,<span class="string">'c'</span>,<span class="string">'verticalalignment'</span>,<span class="string">'m'</span>,<span class="string">'color'</span>,<span class="string">'y'</span>)
+0287         <span class="keyword">end</span>
+0288         hold off
+0289         caxis(cax)
+0290         <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0291         axis image tight off
+0292         title(<span class="string">'Avg of movie, with contours of ICs'</span>)
+0293 
+0294         ax = subplot(1,2,2);
+0295         <span class="keyword">if</span> plottype&lt;=2
+0296             <a href="#_sub1" class="code" title="subfunction complot(sig, ICuse, dt)">complot</a>(ica_sig, ICuse, dt)
+0297         <span class="keyword">end</span>
+0298         set(gca,<span class="string">'ColorOrder'</span>,colord)
+0299         <span class="keyword">if</span> plottype&gt;=2
+0300             [spcICuse,spcord] = ismember(spc,ICuse);
+0301             spc = spcord(spcICuse&amp;(spt&lt;=tlims(2))&amp;(spt&gt;=tlims(1)));
+0302             spt = spt(spcICuse&amp;(spt&lt;=tlims(2))&amp;(spt&gt;=tlims(1)));
+0303             alph = diff(ylim)/length(ICuse);
+0304             <span class="keyword">switch</span> plottype
+0305                 <span class="keyword">case</span> 2
+0306                     <span class="comment">% Traces with spikes</span>
+0307                     hold on
+0308                     scatter(spt,-alph*(spc-1)+0.4*alph,20,colord(mod(spc-1,size(colord,1))+1,:),<span class="string">'o'</span>,<span class="string">'filled'</span>)
+0309                     hold off
+0310                 <span class="keyword">case</span> 3
+0311                     <span class="comment">% Spike raster only</span>
+0312                     cla
+0313                     scatter(spt,-alph*(spc-1)+0.4*alph,20,colord(mod(spc-1,size(colord,1))+1,:),<span class="string">'o'</span>,<span class="string">'filled'</span>)
+0314                     yticks=sort(-alph*([1:length(ICuse)]-1)+0.4*alph);
+0315                     yl = sort(-alph*[length(ICuse)-1,-1]);
+0316                     set(gca,<span class="string">'YTick'</span>,yticks)
+0317                     set(gca,<span class="string">'YTicklabel'</span>,num2str(fliplr(ICuse)'),<span class="string">'YLim'</span>,yl)
+0318                     set(gca,<span class="string">'YLim'</span>,sort(-alph*[length(ICuse)-1,-0.6]))
+0319                 <span class="keyword">case</span> 4
+0320                     <span class="comment">% Binned spike rate</span>
+0321                     tvec = [ratebin/2:ratebin:size(ica_sig,2)*dt];
+0322                     binsize = ratebin*ones(size(tvec));
+0323                     binsize(end) = size(ica_sig,2)*dt-tvec(end-1)-ratebin/2;
+0324                     <span class="keyword">for</span> j=1:length(ICuse)
+0325                         sptj = spt(spc==j);
+0326                         spn = hist(sptj,tvec);
+0327                         spr(j,:) = spn./binsize;
+0328                         sperr(j,:) = sqrt(spn)./binsize;
+0329                     <span class="keyword">end</span>
+0330                     spn = hist(spt,tvec);
+0331                     mspr = spn./(binsize*length(ICuse));
+0332                     msperr = sqrt(spn)./(binsize*length(ICuse));
+0333 
+0334                     hold on
+0335                     plot(tvec,mspr,<span class="string">'k'</span>,<span class="string">'LineWidth'</span>,3);
+0336                     patch([tvec(end:-1:1),tvec],[mspr(end:-1:1)+msperr(end:-1:1),mspr-msperr],0.5*[1,1,1],<span class="string">'FaceAlpha'</span>,1)
+0337                     hold off
+0338                     axis tight
+0339                     <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0340             <span class="keyword">end</span>
+0341         <span class="keyword">end</span>
+0342         <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0343         xlim(tlims)
+0344         xlabel(<span class="string">'Time (s)'</span>,<span class="string">'FontAngle'</span>,<span class="string">'i'</span>)
+0345         <span class="keyword">if</span> plottype&lt;=3
+0346             ylabel(<span class="string">'IC #'</span>,<span class="string">'FontAngle'</span>,<span class="string">'i'</span>)
+0347         <span class="keyword">else</span>
+0348             ylabel(<span class="string">'Spike rate (Hz)'</span>,<span class="string">'FontAngle'</span>,<span class="string">'i'</span>)
+0349         <span class="keyword">end</span>
+0350         set(gcf,<span class="string">'Color'</span>,<span class="string">'w'</span>,<span class="string">'PaperPositionMode'</span>,<span class="string">'auto'</span>)
+0351         set(gca,<span class="string">'yticklabel'</span>,num2str(fliplr([1:length(ICuse)])'))
+0352 
+0353         axes(<span class="string">'Position'</span>,get(ax,<span class="string">'Position'</span>),<span class="string">'XAxisLocation'</span>,<span class="string">'top'</span>,<span class="string">'Color'</span>,<span class="string">'none'</span>)
+0354         xt = get(ax,<span class="string">'XTick'</span>);
+0355         xlim(tlims)
+0356         <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0357         set(gca,<span class="string">'YTick'</span>,[], <span class="keyword">...</span>
+0358             <span class="string">'XTick'</span>,xt,<span class="string">'XTickLabel'</span>,num2str(xt'/dt, <span class="string">'%15.0f'</span>))
+0359         xlabel(<span class="string">'Frame number'</span>)
+0360         axes(ax)
+0361         box on
+0362 
+0363 <span class="keyword">end</span>
+0364 
+0365 <span class="comment">%%%%%%%%%%%%%%%%%%%%%</span>
+0366 <a name="_sub1" href="#_subfunctions" class="code">function complot(sig, ICuse, dt)</a>
+0367 
+0368 <span class="keyword">for</span> i = 1:length(ICuse)
+0369     zsig(i, :) = zscore(sig(ICuse(i),:));
+0370 <span class="keyword">end</span>
+0371 
+0372 alpha = mean(max(zsig')-min(zsig'));
+0373 <span class="keyword">if</span> islogical(zsig)
+0374     alpha = 1.5*alpha;
+0375 <span class="keyword">end</span>
+0376 
+0377 zsig2 = zsig;
+0378 <span class="keyword">for</span> i = 1:size(ICuse,2)
+0379     zsig2(i,:) = zsig(i,:) - alpha*(i-1)*ones(size(zsig(1,:)));
+0380 <span class="keyword">end</span>
+0381 
+0382 tvec = [1:size(zsig,2)]*dt;
+0383 <span class="keyword">if</span> islogical(zsig)
+0384     plot(tvec, zsig2',<span class="string">'LineWidth'</span>,1)
+0385 <span class="keyword">else</span>
+0386     plot(tvec, zsig2',<span class="string">'LineWidth'</span>,1)
+0387 <span class="keyword">end</span>
+0388 axis tight
+0389 
+0390 set(gca,<span class="string">'YTick'</span>,(-size(zsig,1)+1)*alpha:alpha:0);
+0391 set(gca,<span class="string">'YTicklabel'</span>,fliplr(ICuse));
+0392 
+0393 
+0394 <a name="_sub2" href="#_subfunctions" class="code">function formataxes</a>
+0395 
+0396 set(gca,<span class="string">'FontSize'</span>,12,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'FontName'</span>,<span class="string">'Helvetica'</span>,<span class="string">'LineWidth'</span>,2,<span class="string">'TickLength'</span>,[1,1]*.02,<span class="string">'tickdir'</span>,<span class="string">'out'</span>)
+0397 set(gcf,<span class="string">'Color'</span>,<span class="string">'w'</span>,<span class="string">'PaperPositionMode'</span>,<span class="string">'auto'</span>)
+0398 
+0399 <a name="_sub3" href="#_subfunctions" class="code">function fout = gaussblur(fin, smpix)</a>
+0400 <span class="comment">%</span>
+0401 <span class="comment">% Blur an image with a Gaussian kernel of s.d. smpix</span>
+0402 <span class="comment">%</span>
+0403 
+0404 <span class="keyword">if</span> ndims(fin)==2
+0405     [x,y] = meshgrid([-ceil(3*smpix):ceil(3*smpix)]);
+0406     smfilt = exp(-(x.^2+y.^2)/(2*smpix^2));
+0407     smfilt = smfilt/sum(smfilt(:));
+0408 
+0409     fout = imfilter(fin, smfilt, <span class="string">'replicate'</span>, <span class="string">'same'</span>);
+0410 <span class="keyword">else</span>
+0411     [x,y] = meshgrid([-ceil(smpix):ceil(smpix)]);
+0412     smfilt = exp(-(x.^2+y.^2)/(2*smpix^2));
+0413     smfilt = smfilt/sum(smfilt(:));
+0414 
+0415     fout = imfilter(fin, smfilt, <span class="string">'replicate'</span>, <span class="string">'same'</span>);
+0416 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Wed 29-Jul-2009 12:46:53 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CellsortPCA</title>
+  <meta name="keywords" content="CellsortPCA">
+  <meta name="description" content="[mixedsig, mixedfilters, CovEvals, covtrace, movm, movtm] = CellsortPCA(fn, flims, nPCs, dsamp, outputdir, badframes)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div> <a href="index.html">CellSort 1.0</a> &gt; CellsortPCA.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="images/left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for CellSort 1.0&nbsp;<img alt=">" border="0" src="images/right.png"></a></td></tr></table>-->
+
+<h1>CellsortPCA
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>[mixedsig, mixedfilters, CovEvals, covtrace, movm, movtm] = CellsortPCA(fn, flims, nPCs, dsamp, outputdir, badframes)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>function [mixedsig, mixedfilters, CovEvals, covtrace, movm,movtm] = CellsortPCA(fn, flims, nPCs, dsamp, outputdir, badframes) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre class="comment"> [mixedsig, mixedfilters, CovEvals, covtrace, movm, movtm] = CellsortPCA(fn, flims, nPCs, dsamp, outputdir, badframes)
+
+ CELLSORT
+ Read TIFF movie data and perform singular-value decomposition (SVD)
+ dimensional reduction.
+
+ Inputs:
+   fn - movie file name. Must be in TIFF format.
+   flims - 2-element vector specifying the endpoints of the range of
+   frames to be analyzed. If empty, default is to analyze all movie
+   frames.
+   nPCs - number of principal components to be returned
+   dsamp - optional downsampling factor. If scalar, specifies temporal
+   downsampling factor. If two-element vector, entries specify temporal
+   and spatial downsampling, respectively.
+   outputdir - directory in which to store output .mat files
+   badframes - optional list of indices of movie frames to be excluded
+   from analysis
+
+ Outputs:
+   mixedsig - N x T matrix of N temporal signal mixtures sampled at T
+   points.
+   mixedfilters - N x X x Y array of N spatial signal mixtures sampled at
+   X x Y spatial points.
+   CovEvals - largest eigenvalues of the covariance matrix
+   covtrace - trace of covariance matrix, corresponding to the sum of all
+   eigenvalues (not just the largest few)
+   movm - average of all movie time frames at each pixel
+   movtm - average of all movie pixels at each time frame, after
+   normalizing each pixel deltaF/F
+
+ Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009
+ Email: eran@post.harvard.edu, mschnitz@stanford.edu</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [covmat, mov, movm, movtm] = create_xcov(fn, pixw, pixh, useframes, nt, dsamp)</a></li><li><a href="#_sub2" class="code">function [covmat, mov, movm, movtm] = create_tcov(fn, pixw, pixh, useframes, nt, dsamp)</a></li><li><a href="#_sub3" class="code">function [mixedsig, CovEvals, percentvar] = cellsort_svd(covmat, nPCs, nt, npix)</a></li><li><a href="#_sub4" class="code">function [mixedfilters] = reload_moviedata(npix, mov, mixedsig, CovEvals)</a></li><li><a href="#_sub5" class="code">function j = tiff_frames(fn)</a></li></ul>
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [mixedsig, mixedfilters, CovEvals, covtrace, movm, </a><span class="keyword">...</span>
+0002     movtm] = CellsortPCA(fn, flims, nPCs, dsamp, outputdir, badframes)
+0003 <span class="comment">% [mixedsig, mixedfilters, CovEvals, covtrace, movm, movtm] = CellsortPCA(fn, flims, nPCs, dsamp, outputdir, badframes)</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">% CELLSORT</span>
+0006 <span class="comment">% Read TIFF movie data and perform singular-value decomposition (SVD)</span>
+0007 <span class="comment">% dimensional reduction.</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% Inputs:</span>
+0010 <span class="comment">%   fn - movie file name. Must be in TIFF format.</span>
+0011 <span class="comment">%   flims - 2-element vector specifying the endpoints of the range of</span>
+0012 <span class="comment">%   frames to be analyzed. If empty, default is to analyze all movie</span>
+0013 <span class="comment">%   frames.</span>
+0014 <span class="comment">%   nPCs - number of principal components to be returned</span>
+0015 <span class="comment">%   dsamp - optional downsampling factor. If scalar, specifies temporal</span>
+0016 <span class="comment">%   downsampling factor. If two-element vector, entries specify temporal</span>
+0017 <span class="comment">%   and spatial downsampling, respectively.</span>
+0018 <span class="comment">%   outputdir - directory in which to store output .mat files</span>
+0019 <span class="comment">%   badframes - optional list of indices of movie frames to be excluded</span>
+0020 <span class="comment">%   from analysis</span>
+0021 <span class="comment">%</span>
+0022 <span class="comment">% Outputs:</span>
+0023 <span class="comment">%   mixedsig - N x T matrix of N temporal signal mixtures sampled at T</span>
+0024 <span class="comment">%   points.</span>
+0025 <span class="comment">%   mixedfilters - N x X x Y array of N spatial signal mixtures sampled at</span>
+0026 <span class="comment">%   X x Y spatial points.</span>
+0027 <span class="comment">%   CovEvals - largest eigenvalues of the covariance matrix</span>
+0028 <span class="comment">%   covtrace - trace of covariance matrix, corresponding to the sum of all</span>
+0029 <span class="comment">%   eigenvalues (not just the largest few)</span>
+0030 <span class="comment">%   movm - average of all movie time frames at each pixel</span>
+0031 <span class="comment">%   movtm - average of all movie pixels at each time frame, after</span>
+0032 <span class="comment">%   normalizing each pixel deltaF/F</span>
+0033 <span class="comment">%</span>
+0034 <span class="comment">% Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009</span>
+0035 <span class="comment">% Email: eran@post.harvard.edu, mschnitz@stanford.edu</span>
+0036 
+0037 tic
+0038 fprintf(<span class="string">'-------------- CellsortPCA %s: %s -------------- \n'</span>, date, fn)
+0039 
+0040 <span class="comment">%-----------------------</span>
+0041 <span class="comment">% Check inputs</span>
+0042 <span class="keyword">if</span> isempty(dir(fn))
+0043     error(<span class="string">'Invalid input file name.'</span>)
+0044 <span class="keyword">end</span>
+0045 <span class="keyword">if</span> (nargin&lt;2)||(isempty(flims))
+0046     nt_full = <a href="#_sub5" class="code" title="subfunction j = tiff_frames(fn)">tiff_frames</a>(fn);
+0047     flims = [1,nt_full];
+0048 <span class="keyword">end</span>
+0049 
+0050 useframes = setdiff((flims(1):flims(2)), badframes);
+0051 nt = length(useframes);
+0052 
+0053 <span class="keyword">if</span> nargin&lt;3 || isempty(nPCs)
+0054     nPCs = min(150, nt);
+0055 <span class="keyword">end</span>
+0056 <span class="keyword">if</span> nargin&lt;4 || isempty(dsamp)
+0057     dsamp = [1,1];
+0058 <span class="keyword">end</span>
+0059 <span class="keyword">if</span> nargin&lt;5 || isempty(outputdir)
+0060     outputdir = [pwd,<span class="string">'/cellsort_preprocessed_data/'</span>];
+0061 <span class="keyword">end</span>
+0062 <span class="keyword">if</span> nargin&lt;6
+0063     badframes = [];
+0064 <span class="keyword">end</span>
+0065 <span class="keyword">if</span> isempty(dir(outputdir))
+0066     mkdir(pwd, <span class="string">'/cellsort_preprocessed_data/'</span>)
+0067 <span class="keyword">end</span>
+0068 <span class="keyword">if</span> outputdir(end)~=<span class="string">'/'</span>;
+0069     outputdir = [outputdir, <span class="string">'/'</span>];
+0070 <span class="keyword">end</span>
+0071 
+0072 <span class="comment">% Downsampling</span>
+0073 <span class="keyword">if</span> length(dsamp)==1
+0074     dsamp_time = dsamp(1);
+0075     dsamp_space = 1;
+0076 <span class="keyword">else</span>
+0077     dsamp_time = dsamp(1);
+0078     dsamp_space = dsamp(2); <span class="comment">% Spatial downsample</span>
+0079 <span class="keyword">end</span>
+0080 
+0081 [fpath, fname] = fileparts(fn);
+0082 <span class="keyword">if</span> isempty(badframes)
+0083     fnmat = [outputdir, fname, <span class="string">'_'</span>,num2str(flims(1)),<span class="string">','</span>,num2str(flims(2)), <span class="string">'_'</span>, date,<span class="string">'.mat'</span>];
+0084 <span class="keyword">else</span>
+0085     fnmat = [outputdir, fname, <span class="string">'_'</span>,num2str(flims(1)),<span class="string">','</span>,num2str(flims(2)),<span class="string">'_selframes_'</span>, date,<span class="string">'.mat'</span>];
+0086 <span class="keyword">end</span>
+0087 <span class="keyword">if</span> ~isempty(dir(fnmat))
+0088     fprintf(<span class="string">'CELLSORT: Movie %s already processed;'</span>, <span class="keyword">...</span>
+0089         fn)
+0090     forceload = input(<span class="string">' Re-load data? [0-no/1-yes] '</span>);
+0091     <span class="keyword">if</span> isempty(forceload) || forceload==0
+0092         load(fnmat)
+0093         <span class="keyword">return</span>
+0094     <span class="keyword">end</span>
+0095 <span class="keyword">end</span>
+0096 
+0097 fncovmat = [outputdir, fname, <span class="string">'_cov_'</span>, num2str(flims(1)), <span class="string">','</span>, num2str(flims(2)), <span class="string">'_'</span>, date,<span class="string">'.mat'</span>];
+0098 
+0099 [pixw,pixh] = size(imread(fn,1));
+0100 npix = pixw*pixh;
+0101 
+0102 fprintf(<span class="string">'   %d pixels x %d time frames;'</span>, npix, nt)
+0103 <span class="keyword">if</span> nt&lt;npix
+0104     fprintf(<span class="string">' using temporal covariance matrix.\n'</span>)
+0105 <span class="keyword">else</span>
+0106     fprintf(<span class="string">' using spatial covariance matrix.\n'</span>)
+0107 <span class="keyword">end</span>
+0108 
+0109 <span class="comment">% Create covariance matrix</span>
+0110 <span class="keyword">if</span> nt &lt; npix
+0111     [covmat, mov, movm, movtm] = <a href="#_sub2" class="code" title="subfunction [covmat, mov, movm, movtm] = create_tcov(fn, pixw, pixh, useframes, nt, dsamp)">create_tcov</a>(fn, pixw, pixh, useframes, nt, dsamp);
+0112 <span class="keyword">else</span>
+0113     [covmat, mov, movm, movtm] = <a href="#_sub1" class="code" title="subfunction [covmat, mov, movm, movtm] = create_xcov(fn, pixw, pixh, useframes, nt, dsamp)">create_xcov</a>(fn, pixw, pixh, useframes, nt, dsamp);
+0114 <span class="keyword">end</span>
+0115 covtrace = trace(covmat) / npix;
+0116 movm = reshape(movm, pixw, pixh);
+0117 
+0118 <span class="keyword">if</span> nt &lt; npix
+0119     <span class="comment">% Perform SVD on temporal covariance</span>
+0120     [mixedsig, CovEvals, percentvar] = <a href="#_sub3" class="code" title="subfunction [mixedsig, CovEvals, percentvar] = cellsort_svd(covmat, nPCs, nt, npix)">cellsort_svd</a>(covmat, nPCs, nt, npix);
+0121 
+0122     <span class="comment">% Load the other set of principal components</span>
+0123     [mixedfilters] = <a href="#_sub4" class="code" title="subfunction [mixedfilters] = reload_moviedata(npix, mov, mixedsig, CovEvals)">reload_moviedata</a>(pixw*pixh, mov, mixedsig, CovEvals);
+0124 <span class="keyword">else</span>
+0125     <span class="comment">% Perform SVD on spatial components</span>
+0126     [mixedfilters, CovEvals, percentvar] = <a href="#_sub3" class="code" title="subfunction [mixedsig, CovEvals, percentvar] = cellsort_svd(covmat, nPCs, nt, npix)">cellsort_svd</a>(covmat, nPCs, nt, npix);
+0127 
+0128     <span class="comment">% Load the other set of principal components</span>
+0129     [mixedsig] = <a href="#_sub4" class="code" title="subfunction [mixedfilters] = reload_moviedata(npix, mov, mixedsig, CovEvals)">reload_moviedata</a>(nt, mov', mixedfilters, CovEvals);
+0130 <span class="keyword">end</span>
+0131 mixedfilters = reshape(mixedfilters, pixw,pixh,nPCs);
+0132 
+0133 firstframe_full = imread(fn,1);
+0134 firstframe = firstframe_full;
+0135 <span class="keyword">if</span> dsamp_space&gt;1
+0136     firstframe = imresize(firstframe, size(mov(:,:,1)),<span class="string">'bilinear'</span>);
+0137 <span class="keyword">end</span>
+0138 
+0139 <span class="comment">%------------</span>
+0140 <span class="comment">% Save the output data</span>
+0141 save(fnmat,<span class="string">'mixedfilters'</span>,<span class="string">'CovEvals'</span>,<span class="string">'mixedsig'</span>, <span class="keyword">...</span>
+0142     <span class="string">'movm'</span>,<span class="string">'movtm'</span>,<span class="string">'covtrace'</span>)
+0143 fprintf(<span class="string">' CellsortPCA: saving data and exiting; '</span>)
+0144 toc
+0145 
+0146     <span class="keyword">function</span> [covmat, mov, movm, movtm] = <a href="#_sub1" class="code" title="subfunction [covmat, mov, movm, movtm] = create_xcov(fn, pixw, pixh, useframes, nt, dsamp)">create_xcov</a>(fn, pixw, pixh, useframes, nt, dsamp)
+0147         <span class="comment">%-----------------------</span>
+0148         <span class="comment">% Load movie data to compute the spatial covariance matrix</span>
+0149 
+0150         npix = pixw*pixh;
+0151 
+0152         <span class="comment">% Downsampling</span>
+0153         <span class="keyword">if</span> length(dsamp)==1
+0154             dsamp_time = dsamp(1);
+0155             dsamp_space = 1;
+0156         <span class="keyword">else</span>
+0157             dsamp_time = dsamp(1);
+0158             dsamp_space = dsamp(2); <span class="comment">% Spatial downsample</span>
+0159         <span class="keyword">end</span>
+0160 
+0161         <span class="keyword">if</span> (dsamp_space==1)
+0162             mov = zeros(pixw, pixh, nt);
+0163             <span class="keyword">for</span> jjind=1:length(useframes)
+0164                 jj = useframes(jjind);
+0165                 mov(:,:,jjind) = imread(fn,jj);
+0166                 <span class="keyword">if</span> mod(jjind,500)==1
+0167                     fprintf(<span class="string">' Read frame %4.0f out of %4.0f; '</span>, jjind, nt)
+0168                     toc
+0169                 <span class="keyword">end</span>
+0170             <span class="keyword">end</span>
+0171         <span class="keyword">else</span>
+0172             [pixw_dsamp,pixh_dsamp] = size(imresize( imread(fn,1), 1/dsamp_space, <span class="string">'bilinear'</span> ));
+0173             mov = zeros(pixw_dsamp, pixh_dsamp, nt);
+0174             <span class="keyword">for</span> jjind=1:length(useframes)
+0175                 jj = useframes(jjind);
+0176                 mov(:,:,jjind) = imresize( imread(fn,jj), 1/dsamp_space, <span class="string">'bilinear'</span> );
+0177                 <span class="keyword">if</span> mod(jjind,500)==1
+0178                     fprintf(<span class="string">' Read frame %4.0f out of %4.0f; '</span>, jjind, nt)
+0179                     toc
+0180                 <span class="keyword">end</span>
+0181             <span class="keyword">end</span>
+0182         <span class="keyword">end</span>
+0183 
+0184         fprintf(<span class="string">' Read frame %4.0f out of %4.0f; '</span>, jjind, nt)
+0185         toc
+0186         mov = reshape(mov, npix, nt);
+0187 
+0188         <span class="comment">% DFoF normalization of each pixel</span>
+0189         movm = mean(mov,2); <span class="comment">% Average over time</span>
+0190         movmzero = (movm==0);
+0191         movm(movmzero) = 1;
+0192         mov = mov ./ (movm * ones(1,nt)) - 1; <span class="comment">% Compute Delta F/F</span>
+0193         mov(movmzero, :) = 0;
+0194 
+0195         <span class="keyword">if</span> dsamp_time&gt;1
+0196             mov = filter(ones(dsamp,1)/dsamp, 1, mov, [], 2);
+0197             mov = downsample(mov', dsamp)';
+0198         <span class="keyword">end</span>
+0199 
+0200         movtm = mean(mov,2); <span class="comment">% Average over space</span>
+0201         clear movmzeros
+0202 
+0203         c1 = (mov*mov')/size(mov,2);
+0204         toc
+0205         covmat = c1 - movtm*movtm';
+0206         clear c1
+0207     <span class="keyword">end</span>
+0208 
+0209     <span class="keyword">function</span> [covmat, mov, movm, movtm] = <a href="#_sub2" class="code" title="subfunction [covmat, mov, movm, movtm] = create_tcov(fn, pixw, pixh, useframes, nt, dsamp)">create_tcov</a>(fn, pixw, pixh, useframes, nt, dsamp)
+0210         <span class="comment">%-----------------------</span>
+0211         <span class="comment">% Load movie data to compute the temporal covariance matrix</span>
+0212         npix = pixw*pixh;
+0213 
+0214         <span class="comment">% Downsampling</span>
+0215         <span class="keyword">if</span> length(dsamp)==1
+0216             dsamp_time = dsamp(1);
+0217             dsamp_space = 1;
+0218         <span class="keyword">else</span>
+0219             dsamp_time = dsamp(1);
+0220             dsamp_space = dsamp(2); <span class="comment">% Spatial downsample</span>
+0221         <span class="keyword">end</span>
+0222 
+0223         <span class="keyword">if</span> (dsamp_space==1)
+0224             mov = zeros(pixw, pixh, nt);
+0225             <span class="keyword">for</span> jjind=1:length(useframes)
+0226                 jj = useframes(jjind);
+0227                 mov(:,:,jjind) = imread(fn,jj);
+0228                 <span class="keyword">if</span> mod(jjind,500)==1
+0229                     fprintf(<span class="string">' Read frame %4.0f out of %4.0f; '</span>, jjind, nt)
+0230                     toc
+0231                 <span class="keyword">end</span>
+0232             <span class="keyword">end</span>
+0233         <span class="keyword">else</span>
+0234             [pixw_dsamp,pixh_dsamp] = size(imresize( imread(fn,1), 1/dsamp_space, <span class="string">'bilinear'</span> ));
+0235             mov = zeros(pixw_dsamp, pixh_dsamp, nt);
+0236             <span class="keyword">for</span> jjind=1:length(useframes)
+0237                 jj = useframes(jjind);
+0238                 mov(:,:,jjind) = imresize( imread(fn,jj), 1/dsamp_space, <span class="string">'bilinear'</span> );
+0239                 <span class="keyword">if</span> mod(jjind,500)==1
+0240                     fprintf(<span class="string">' Read frame %4.0f out of %4.0f; '</span>, jjind, nt)
+0241                     toc
+0242                 <span class="keyword">end</span>
+0243             <span class="keyword">end</span>
+0244         <span class="keyword">end</span>
+0245 
+0246         fprintf(<span class="string">' Read frame %4.0f out of %4.0f; '</span>, jjind, nt)
+0247         toc
+0248         mov = reshape(mov, npix, nt);
+0249 
+0250         <span class="comment">% DFoF normalization of each pixel</span>
+0251         movm = mean(mov,2); <span class="comment">% Average over time</span>
+0252         movmzero = (movm==0); <span class="comment">% Avoid dividing by zero</span>
+0253         movm(movmzero) = 1;
+0254         mov = mov ./ (movm * ones(1,nt)) - 1;
+0255         mov(movmzero, :) = 0;
+0256 
+0257         <span class="keyword">if</span> dsamp_time&gt;1
+0258             mov = filter(ones(dsamp,1)/dsamp, 1, mov, [], 2);
+0259             mov = downsample(mov', dsamp)';
+0260         <span class="keyword">end</span>
+0261 
+0262         c1 = (mov'*mov)/npix;
+0263         movtm = mean(mov,1); <span class="comment">% Average over space</span>
+0264         covmat = c1 - movtm'*movtm;
+0265         clear c1
+0266     <span class="keyword">end</span>
+0267 
+0268     <span class="keyword">function</span> [mixedsig, CovEvals, percentvar] = <a href="#_sub3" class="code" title="subfunction [mixedsig, CovEvals, percentvar] = cellsort_svd(covmat, nPCs, nt, npix)">cellsort_svd</a>(covmat, nPCs, nt, npix)
+0269         <span class="comment">%-----------------------</span>
+0270         <span class="comment">% Perform SVD</span>
+0271 
+0272         covtrace = trace(covmat) / npix;
+0273 
+0274         opts.disp = 0;
+0275         opts.issym = <span class="string">'true'</span>;
+0276         <span class="keyword">if</span> nPCs&lt;size(covmat,1)
+0277             [mixedsig, CovEvals] = eigs(covmat, nPCs, <span class="string">'LM'</span>, opts);  <span class="comment">% pca_mixedsig are the temporal signals, mixedsig</span>
+0278         <span class="keyword">else</span>
+0279             [mixedsig, CovEvals] = eig(covmat);
+0280             CovEvals = diag( sort(diag(CovEvals), <span class="string">'descend'</span>));
+0281             nPCs = size(CovEvals,1);
+0282         <span class="keyword">end</span>
+0283         CovEvals = diag(CovEvals);
+0284         <span class="keyword">if</span> nnz(CovEvals&lt;=0)
+0285             nPCs = nPCs - nnz(CovEvals&lt;=0);
+0286             fprintf([<span class="string">'Throwing out '</span>,num2str(nnz(CovEvals&lt;0)),<span class="string">' negative eigenvalues; new # of PCs = '</span>,num2str(nPCs),<span class="string">'. \n'</span>]);
+0287             mixedsig = mixedsig(:,CovEvals&gt;0);
+0288             CovEvals = CovEvals(CovEvals&gt;0);
+0289         <span class="keyword">end</span>
+0290 
+0291         mixedsig = mixedsig' * nt;
+0292         CovEvals = CovEvals / npix;
+0293 
+0294         percentvar = 100*sum(CovEvals)/covtrace;
+0295         fprintf([<span class="string">' First '</span>,num2str(nPCs),<span class="string">' PCs contain '</span>,num2str(percentvar,3),<span class="string">'%% of the variance.\n'</span>])
+0296     <span class="keyword">end</span>
+0297 
+0298     <span class="keyword">function</span> [mixedfilters] = <a href="#_sub4" class="code" title="subfunction [mixedfilters] = reload_moviedata(npix, mov, mixedsig, CovEvals)">reload_moviedata</a>(npix, mov, mixedsig, CovEvals)
+0299         <span class="comment">%-----------------------</span>
+0300         <span class="comment">% Re-load movie data</span>
+0301         nPCs = size(mixedsig,1);
+0302 
+0303         Sinv = inv(diag(CovEvals.^(1/2)));
+0304 
+0305         movtm = mean(mov,1); <span class="comment">% Average over space</span>
+0306         movuse = mov - ones(npix,1) * movtm;
+0307         mixedfilters = reshape(movuse * mixedsig' * Sinv, npix, nPCs);
+0308     <span class="keyword">end</span>
+0309
+0310 
+0311     <span class="keyword">function</span> j = <a href="#_sub5" class="code" title="subfunction j = tiff_frames(fn)">tiff_frames</a>(fn)
+0312         <span class="comment">%</span>
+0313         <span class="comment">% n = tiff_frames(filename)</span>
+0314         <span class="comment">%</span>
+0315         <span class="comment">% Returns the number of slices in a TIFF stack.</span>
+0316         <span class="comment">%</span>
+0317         <span class="comment">% Modified April 9, 2013 for compatibility with MATLAB 2012b</span>
+0318 
+0319         j = length(imfinfo(fn));
+0320     <span class="keyword">end</span>
+0321 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Wed 29-Jul-2009 12:46:53 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

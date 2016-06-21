@@ -1,0 +1,144 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CellsortApplyFilter</title>
+  <meta name="keywords" content="CellsortApplyFilter">
+  <meta name="description" content="cell_sig = CellsortApplyFilter(fn, ica_segments, flims, movm, subtractmean)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="index.html">CellSort 1.0</a> &gt; CellsortApplyFilter.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="images/left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for CellSort 1.0&nbsp;<img alt=">" border="0" src="images/right.png"></a></td></tr></table>-->
+
+<h1>CellsortApplyFilter
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>cell_sig = CellsortApplyFilter(fn, ica_segments, flims, movm, subtractmean)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>function cell_sig = CellsortApplyFilter(fn, ica_segments, flims, movm, subtractmean) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre class="comment"> cell_sig = CellsortApplyFilter(fn, ica_segments, flims, movm, subtractmean)
+
+CellsortApplyFilter
+ Read in movie data and output signals corresponding to specified spatial
+ filters
+
+ Inputs:
+     fn - file name of TIFF movie file
+     ica_segments - nIC x X matrix of ICA spatial filters
+     flims - optional two-element vector of frame limits to be read
+     movm - mean fluorescence image
+     subtractmean - boolean specifying whether or not to subtract the mean
+     fluorescence of each time frame
+
+ Outputs:
+     cell_sig - cellular signals
+
+ Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009
+ Email: eran@post.harvard.edu, mschnitz@stanford.edu</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function j = tiff_frames(fn)</a></li></ul>
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function cell_sig = CellsortApplyFilter(fn, ica_segments, flims, movm, subtractmean)</a>
+0002 <span class="comment">% cell_sig = CellsortApplyFilter(fn, ica_segments, flims, movm, subtractmean)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%CellsortApplyFilter</span>
+0005 <span class="comment">% Read in movie data and output signals corresponding to specified spatial</span>
+0006 <span class="comment">% filters</span>
+0007 <span class="comment">%</span>
+0008 <span class="comment">% Inputs:</span>
+0009 <span class="comment">%     fn - file name of TIFF movie file</span>
+0010 <span class="comment">%     ica_segments - nIC x X matrix of ICA spatial filters</span>
+0011 <span class="comment">%     flims - optional two-element vector of frame limits to be read</span>
+0012 <span class="comment">%     movm - mean fluorescence image</span>
+0013 <span class="comment">%     subtractmean - boolean specifying whether or not to subtract the mean</span>
+0014 <span class="comment">%     fluorescence of each time frame</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% Outputs:</span>
+0017 <span class="comment">%     cell_sig - cellular signals</span>
+0018 <span class="comment">%</span>
+0019 <span class="comment">% Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009</span>
+0020 <span class="comment">% Email: eran@post.harvard.edu, mschnitz@stanford.edu</span>
+0021 
+0022 <span class="keyword">if</span> (nargin&lt;3)||isempty(flims)
+0023     nt = <a href="#_sub1" class="code" title="subfunction j = tiff_frames(fn)">tiff_frames</a>(fn);
+0024     flims = [1,nt];
+0025 <span class="keyword">else</span>
+0026     nt = diff(flims)+1;
+0027 <span class="keyword">end</span>
+0028 <span class="keyword">if</span> nargin&lt;5
+0029     subtractmean = 1;
+0030 <span class="keyword">end</span>
+0031 
+0032 [pixw,pixh] = size(imread(fn,1));
+0033 <span class="keyword">if</span> (nargin&lt;4)||isempty(movm)
+0034     movm = ones(pixw,pixh);
+0035 <span class="keyword">else</span>
+0036     movm = double(movm);
+0037 <span class="keyword">end</span>
+0038 movm(movm==0) = 1; <span class="comment">% Just in case there are black areas in the average image</span>
+0039 k=0;
+0040 
+0041 cell_sig = zeros(size(ica_segments,1), nt);
+0042 ica_segments = reshape(ica_segments, [], pixw*pixh);
+0043 
+0044 fprintf(<span class="string">'Loading %5g frames for %d ROIs.\n'</span>, nt, size(ica_segments,1))
+0045 <span class="keyword">while</span> k&lt;nt
+0046     ntcurr = min(500, nt-k);
+0047     mov = zeros(pixw, pixh, ntcurr);
+0048     <span class="keyword">for</span> j=1:ntcurr
+0049         movcurr = imread(fn, j+k+flims(1)-1);
+0050         mov(:,:,j) = movcurr;
+0051     <span class="keyword">end</span>
+0052     mov = (mov ./ repmat(movm, [1,1,ntcurr])) - 1; <span class="comment">% Normalize by background and subtract mean</span>
+0053 
+0054     <span class="keyword">if</span> subtractmean
+0055         <span class="comment">% Subtract the mean of each frame</span>
+0056         movtm = mean(mean(mov,1),2);
+0057         mov = mov - repmat(movtm,[pixw,pixh,1]);
+0058     <span class="keyword">end</span>
+0059 
+0060     mov = reshape(mov, pixw*pixh, ntcurr);
+0061     cell_sig(:, k+[1:ntcurr]) = ica_segments*mov;
+0062 
+0063     k=k+ntcurr;
+0064     fprintf(<span class="string">'Loaded %3.0f frames; '</span>, k)
+0065     toc
+0066 <span class="keyword">end</span>
+0067 
+0068 
+0069     <span class="keyword">function</span> j = <a href="#_sub1" class="code" title="subfunction j = tiff_frames(fn)">tiff_frames</a>(fn)
+0070         <span class="comment">%</span>
+0071         <span class="comment">% n = tiff_frames(filename)</span>
+0072         <span class="comment">%</span>
+0073         <span class="comment">% Returns the number of slices in a TIFF stack.</span>
+0074         <span class="comment">%</span>
+0075         <span class="comment">% Modified April 9, 2013 for compatibility with MATLAB 2012b</span>
+0076 
+0077         j = length(imfinfo(fn));
+0078 <span class="keyword">end</span></pre></div>
+<hr><address>Generated on Wed 29-Jul-2009 12:46:53 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

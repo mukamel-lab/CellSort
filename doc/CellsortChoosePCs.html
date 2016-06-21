@@ -1,0 +1,175 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CellsortChoosePCs</title>
+  <meta name="keywords" content="CellsortChoosePCs">
+  <meta name="description" content="[PCuse] = CellsortChoosePCs(fn, mixedfilters)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div> <a href="index.html">CellSort 1.0</a> &gt; CellsortChoosePCs.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="images/left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for CellSort 1.0&nbsp;<img alt=">" border="0" src="images/right.png"></a></td></tr></table>-->
+
+<h1>CellsortChoosePCs
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>[PCuse] = CellsortChoosePCs(fn, mixedfilters)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>function [PCuse] = CellsortChoosePCs(fn, mixedfilters) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre class="comment"> [PCuse] = CellsortChoosePCs(fn, mixedfilters)
+
+ Allows the user to select which principal components will be kept
+ following dimensional reduction.
+
+ Inputs:
+   fn - movie file name. Must be in TIFF format.
+   mixedfilters - N x X matrix of N spatial signal mixtures sampled at X
+   spatial points.
+
+ Outputs:
+   PCuse - vector of indices of the PCs to be kept for dimensional
+   reduction
+
+ Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009
+ Email: eran@post.harvard.edu, mschnitz@stanford.edu</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function showpcs(usepcs, Efull, pixw, pixh)</a></li><li><a href="#_sub2" class="code">function formataxes</a></li></ul>
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [PCuse] = CellsortChoosePCs(fn, mixedfilters)</a>
+0002 <span class="comment">% [PCuse] = CellsortChoosePCs(fn, mixedfilters)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">% Allows the user to select which principal components will be kept</span>
+0005 <span class="comment">% following dimensional reduction.</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Inputs:</span>
+0008 <span class="comment">%   fn - movie file name. Must be in TIFF format.</span>
+0009 <span class="comment">%   mixedfilters - N x X matrix of N spatial signal mixtures sampled at X</span>
+0010 <span class="comment">%   spatial points.</span>
+0011 <span class="comment">%</span>
+0012 <span class="comment">% Outputs:</span>
+0013 <span class="comment">%   PCuse - vector of indices of the PCs to be kept for dimensional</span>
+0014 <span class="comment">%   reduction</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009</span>
+0017 <span class="comment">% Email: eran@post.harvard.edu, mschnitz@stanford.edu</span>
+0018 
+0019 fprintf(<span class="string">'-------------- CellsortICA %s -------------- \n'</span>, date)
+0020 
+0021 [pixw,pixh] = size(imread(fn,1));
+0022 
+0023 npcs = 20; <span class="comment">% Number of PCs to display concurrently</span>
+0024 currpcs = [1:npcs];
+0025 PCf = [];
+0026 <span class="keyword">while</span> isempty(PCf)
+0027     <a href="#_sub1" class="code" title="subfunction showpcs(usepcs, Efull, pixw, pixh)">showpcs</a>(currpcs, mixedfilters, pixw, pixh)
+0028     yl = ylim;
+0029     xl = xlim;
+0030     set(gca,<span class="string">'Units'</span>,<span class="string">'pixels'</span>)
+0031     title([<span class="string">'Choose first PC; showing PCs ['</span>,num2str(currpcs(1)),<span class="string">':'</span>,num2str(currpcs(end)),<span class="string">']'</span>])
+0032     PCf = input(<span class="string">'Number of first PC to retain, Klow (''b/f'' to scroll backwards/forwards)): '</span>,<span class="string">'s'</span>);
+0033     <span class="keyword">if</span> PCf==<span class="string">'b'</span>
+0034         currpcs = currpcs - min(npcs,currpcs(1)-1);
+0035         PCf = [];
+0036     <span class="keyword">elseif</span> (PCf==<span class="string">'f'</span>)
+0037         currpcs = currpcs+npcs;
+0038         <span class="keyword">if</span> nnz(currpcs&gt;size(mixedfilters,2))
+0039             currpcs = [-npcs+1:0]+size(mixedfilters,2);
+0040             fprintf(<span class="string">'Reached end of stored PCs.\n'</span>)
+0041         <span class="keyword">end</span>
+0042         PCf = [];
+0043     <span class="keyword">else</span>
+0044         PCf = str2num(PCf);
+0045     <span class="keyword">end</span>
+0046 <span class="keyword">end</span>
+0047 PCl=[];
+0048 currpcs = [PCf:PCf+npcs-1];
+0049 <span class="keyword">while</span> isempty(PCl)
+0050     <a href="#_sub1" class="code" title="subfunction showpcs(usepcs, Efull, pixw, pixh)">showpcs</a>(currpcs, mixedfilters, pixw, pixh)
+0051     title([<span class="string">'Choose last PC; showing PCs ['</span>,num2str(currpcs(1)),<span class="string">':'</span>,num2str(currpcs(end)),<span class="string">']'</span>])
+0052     PCl = input(<span class="string">'Number of last PC to retain, Khigh (''b/f'' to scroll backwards/forwards): '</span>,<span class="string">'s'</span>);
+0053     <span class="keyword">if</span> PCl==<span class="string">'b'</span>
+0054         currpcs = currpcs - min(npcs,currpcs(1)-1);
+0055         PCl = [];
+0056     <span class="keyword">elseif</span> (PCl==<span class="string">'f'</span>)
+0057         currpcs = currpcs+npcs;
+0058         <span class="keyword">if</span> nnz(currpcs&gt;size(mixedfilters,2))
+0059             currpcs = [-npcs+1:0]+size(mixedfilters,2);
+0060             fprintf(<span class="string">'Reached end of stored PCs.\n'</span>)
+0061         <span class="keyword">end</span>
+0062         PCl = [];
+0063     <span class="keyword">else</span>
+0064         PCl = str2num(PCl);
+0065     <span class="keyword">end</span>
+0066 <span class="keyword">end</span>
+0067 currpcs = [PCf:PCl];
+0068 PCbad=[];
+0069 <a href="#_sub1" class="code" title="subfunction showpcs(usepcs, Efull, pixw, pixh)">showpcs</a>(currpcs, mixedfilters, pixw, pixh)
+0070 
+0071 PCuse = setdiff(currpcs, PCbad);
+0072 <a href="#_sub1" class="code" title="subfunction showpcs(usepcs, Efull, pixw, pixh)">showpcs</a>(PCuse, mixedfilters, pixw, pixh)
+0073 
+0074 fprintf(<span class="string">'  Retaining PCs in the range [Klow - Khigh] = [%d - %d].\n'</span>, PCf,PCl)
+0075 
+0076 <a name="_sub1" href="#_subfunctions" class="code">function showpcs(usepcs, Efull, pixw, pixh)</a>
+0077 
+0078 <span class="keyword">if</span> nargin&lt;3
+0079     fprintf(<span class="string">'Assuming movie frames are square.\n'</span>)
+0080     pixw = sqrt(size(Efull,1));
+0081     pixh = sqrt(size(Efull,1));
+0082 <span class="keyword">end</span>
+0083 <span class="keyword">if</span> isempty(usepcs)
+0084     usepcs = [1:size(Efull,2)];
+0085 <span class="keyword">end</span>
+0086 
+0087 <span class="keyword">if</span> ndims(Efull)&gt;=3
+0088     Efull = reshape(Efull, pixw*pixh, []);
+0089 <span class="keyword">end</span>
+0090 <span class="keyword">for</span> j=usepcs
+0091     Efull(:,j) = zscore(Efull(:,j));
+0092 <span class="keyword">end</span>
+0093 pcs = reshape(Efull(:,usepcs), pixw, pixh, []);
+0094 pcs = permute(pcs, [1, 2, 4, 3]);
+0095 montage(pcs)
+0096 colormap(hot)
+0097 axis on
+0098 xl = xlim;
+0099 yl = ylim;
+0100 nw = ceil(xl(2)/pixh)-1;
+0101 nh = ceil(yl(2)/pixw)-1;
+0102 set(gca,<span class="string">'YTick'</span>,[pixw:pixw:yl(2)],<span class="string">'YTickLabel'</span>,  num2str(usepcs(min([0:nh]*nw+1, length(usepcs)))'), <span class="keyword">...</span>
+0103     <span class="string">'XTick'</span>,[pixh:pixh:xl(2)], <span class="keyword">...</span>
+0104     <span class="string">'XTickLabel'</span>,num2str(usepcs([(nh-1)*nw+1:length(usepcs)])'), <span class="string">'XAxisLocation'</span>,<span class="string">'bottom'</span>,<span class="string">'LineWidth'</span>,2)
+0105 grid on
+0106 <a href="#_sub2" class="code" title="subfunction formataxes">formataxes</a>
+0107 caxis([-1,1]*7)
+0108 
+0109 <a name="_sub2" href="#_subfunctions" class="code">function formataxes</a>
+0110 
+0111 set(gca,<span class="string">'FontSize'</span>,12,<span class="string">'FontWeight'</span>,<span class="string">'bold'</span>,<span class="string">'FontName'</span>,<span class="string">'Helvetica'</span>,<span class="string">'LineWidth'</span>,2,<span class="string">'TickLength'</span>,[1,1]*.02,<span class="string">'tickdir'</span>,<span class="string">'out'</span>)
+0112 set(gcf,<span class="string">'Color'</span>,<span class="string">'w'</span>,<span class="string">'PaperPositionMode'</span>,<span class="string">'auto'</span>)</pre></div>
+<hr><address>Generated on Wed 29-Jul-2009 12:46:53 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

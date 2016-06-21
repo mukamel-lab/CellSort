@@ -1,0 +1,217 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CellsortSegmentation</title>
+  <meta name="keywords" content="CellsortSegmentation">
+  <meta name="description" content="[ica_segments, segmentlabel, segcentroid] = CellsortSegmentation(ica_filters, smwidth, thresh, arealims, plotting)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="index.html">CellSort 1.0</a> &gt; CellsortSegmentation.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="images/left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for CellSort 1.0&nbsp;<img alt=">" border="0" src="images/right.png"></a></td></tr></table>-->
+
+<h1>CellsortSegmentation
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>[ica_segments, segmentlabel, segcentroid] = CellsortSegmentation(ica_filters, smwidth, thresh, arealims, plotting)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>function [ica_segments, segmentlabel, segcentroid] = CellsortSegmentation(ica_filters, smwidth, thresh, arealims, plotting) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre class="comment"> [ica_segments, segmentlabel, segcentroid] = CellsortSegmentation(ica_filters, smwidth, thresh, arealims, plotting)
+
+CellsortSegmentation
+ Segment spatial filters derived by ICA
+
+ Inputs:
+     ica_filters - X x Y x nIC matrix of ICA spatial filters
+     smwidth - standard deviation of Gaussian smoothing kernel (pixels)
+     thresh - threshold for spatial filters (standard deviations)
+     arealims - 2-element vector specifying the minimum and maximum area
+     (in pixels) of segments to be retained; if only one element is
+     specified, use this as the minimum area
+     plotting - [0,1] whether or not to show filters
+
+ Outputs:
+     ica_segments - segmented spatial filters
+     segmentabel - indices of the ICA filters from which each segment was derived
+     segcentroid - X,Y centroid, in pixels, of each segment
+
+ Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009 
+ Email: eran@post.harvard.edu, mschnitz@stanford.edu</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [ica_segments, segmentlabel, segcentroid] = CellsortSegmentation(ica_filters, smwidth, thresh, arealims, plotting)</a>
+0002 <span class="comment">% [ica_segments, segmentlabel, segcentroid] = CellsortSegmentation(ica_filters, smwidth, thresh, arealims, plotting)</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%CellsortSegmentation</span>
+0005 <span class="comment">% Segment spatial filters derived by ICA</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">% Inputs:</span>
+0008 <span class="comment">%     ica_filters - X x Y x nIC matrix of ICA spatial filters</span>
+0009 <span class="comment">%     smwidth - standard deviation of Gaussian smoothing kernel (pixels)</span>
+0010 <span class="comment">%     thresh - threshold for spatial filters (standard deviations)</span>
+0011 <span class="comment">%     arealims - 2-element vector specifying the minimum and maximum area</span>
+0012 <span class="comment">%     (in pixels) of segments to be retained; if only one element is</span>
+0013 <span class="comment">%     specified, use this as the minimum area</span>
+0014 <span class="comment">%     plotting - [0,1] whether or not to show filters</span>
+0015 <span class="comment">%</span>
+0016 <span class="comment">% Outputs:</span>
+0017 <span class="comment">%     ica_segments - segmented spatial filters</span>
+0018 <span class="comment">%     segmentabel - indices of the ICA filters from which each segment was derived</span>
+0019 <span class="comment">%     segcentroid - X,Y centroid, in pixels, of each segment</span>
+0020 <span class="comment">%</span>
+0021 <span class="comment">% Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009</span>
+0022 <span class="comment">% Email: eran@post.harvard.edu, mschnitz@stanford.edu</span>
+0023 
+0024 tic
+0025 fprintf(<span class="string">'-------------- CellsortSegmentation %s -------------- \n'</span>, date)
+0026 
+0027 <span class="keyword">if</span> (nargin&lt;3)||isempty(thresh)
+0028     thresh = 2;
+0029 <span class="keyword">end</span>
+0030 <span class="keyword">if</span> (nargin&lt;4)||isempty(arealims)
+0031     arealims = 200;
+0032 <span class="keyword">end</span>
+0033 <span class="keyword">if</span> (nargin&lt;5)||isempty(plotting)
+0034     plotting = 0;
+0035 <span class="keyword">end</span>
+0036 [nic,pixw,pixh] = size(ica_filters);
+0037 
+0038 ica_filtersorig = ica_filters / abs(std(ica_filters(:)));
+0039 ica_filters = (ica_filters - mean(ica_filters(:)))/abs(std(ica_filters(:)));
+0040 <span class="keyword">if</span> smwidth&gt;0
+0041     <span class="comment">% Smooth mixing filter with a Gaussian of s.d. smwidth pixels</span>
+0042     smrange = max(5,3*smwidth);
+0043     [x,y] = meshgrid([-smrange:smrange]);
+0044 
+0045     smy = 1; smx = 1;
+0046     ica_filtersfilt = exp(-((x/smx).^2 + (y/smy).^2)/(2*smwidth^2));
+0047     
+0048     ica_filtersfilt = ica_filtersfilt/sum(ica_filtersfilt(:));
+0049     ica_filtersbw = false(pixw,pixh,nic);
+0050     tic
+0051     <span class="keyword">for</span> j = 1:size(ica_filters,1)
+0052         ica_filtersuse = ica_filters(j,:,:);
+0053         ica_filtersuse = (ica_filtersuse - mean(ica_filtersuse(:)))/abs(std(ica_filtersuse(:)));
+0054         ica_filtersbw(:,:,j) = (imfilter(ica_filtersuse, ica_filtersfilt, <span class="string">'replicate'</span>, <span class="string">'same'</span>) &gt; thresh);
+0055     <span class="keyword">end</span>
+0056 <span class="keyword">else</span>
+0057     ica_filtersbw = (permute(ica_filters,[2,3,1]) &gt; thresh);
+0058     ica_filtersfilt = 1;
+0059 <span class="keyword">end</span>
+0060 
+0061 tic
+0062 <span class="keyword">if</span> plotting
+0063     clf
+0064     set(gcf,<span class="string">'Color'</span>,<span class="string">'w'</span>)
+0065     colormap(gray)
+0066     
+0067     subplot(223)
+0068     imagesc(squeeze(sum(ica_filters,1)))
+0069     axis image off
+0070     hold on
+0071 <span class="keyword">end</span>
+0072 ica_filterslabel = [];
+0073 ica_segments = [];
+0074 k=0;
+0075 L=[];
+0076 segmentlabel = [];
+0077 segcentroid = [];
+0078 [x,y] = meshgrid([1:pixh], [1:pixw]);
+0079 <span class="keyword">for</span> j = 1:nic
+0080     <span class="comment">% Label contiguous components</span>
+0081     L = bwlabel(ica_filtersbw(:,:,j), 4);
+0082     Lu = 1:max(L(:));
+0083 
+0084     <span class="comment">% Delete small components</span>
+0085     Larea = struct2array(regionprops(L, <span class="string">'area'</span>));
+0086     Lcent = regionprops(L, <span class="string">'Centroid'</span>);
+0087     
+0088     <span class="keyword">if</span> length(arealims)==2
+0089         Lbig = Lu( (Larea &gt;= arealims(1))&amp;(Larea &lt;= arealims(2)));
+0090         Lsmall = Lu((Larea &lt; arealims(1))|(Larea &gt; arealims(2)));
+0091     <span class="keyword">else</span>
+0092         Lbig = Lu(Larea &gt;= arealims(1));
+0093         Lsmall = Lu(Larea &lt; arealims(1));
+0094     <span class="keyword">end</span>
+0095     
+0096     L(ismember(L,Lsmall)) = 0;   
+0097         
+0098     <span class="keyword">for</span> jj = 1:length(Lbig)
+0099         segcentroid(jj+k,:) = Lcent(Lbig(jj)).Centroid;
+0100     <span class="keyword">end</span>
+0101     
+0102     ica_filtersuse = squeeze(ica_filtersorig(j,:,:));
+0103     <span class="keyword">for</span> jj = 1:length(Lbig)
+0104         ica_segments(jj+k,:,:) = ica_filtersuse .* ( 0*(L==0) + (L==Lbig(jj)) );  <span class="comment">% Exclude background</span>
+0105     <span class="keyword">end</span>
+0106     
+0107     <span class="keyword">if</span> plotting &amp;&amp; ~isempty(Lbig)
+0108         <span class="keyword">if</span> smwidth&gt;0
+0109             subplot(2,2,2)
+0110             ica_filtersuse = squeeze(ica_filters(j,:,:));
+0111             ica_filtersuse = (ica_filtersuse - mean(ica_filtersuse(:)))/abs(std(ica_filtersuse(:)));
+0112             imagesc(imfilter((ica_filtersuse), ica_filtersfilt, <span class="string">'replicate'</span>, <span class="string">'same'</span>),[-1,4])
+0113             hold on
+0114             contour(imfilter((ica_filtersuse), ica_filtersfilt, <span class="string">'replicate'</span>, <span class="string">'same'</span>), [1,1]*thresh, <span class="string">'k'</span>)
+0115             hold off
+0116             hc = colorbar(<span class="string">'Position'</span>,[0.9189    0.6331    0.0331    0.2253]);
+0117             ylabel(hc,<span class="string">'Std. dev.'</span>)
+0118             title([<span class="string">'IC '</span>,num2str(j),<span class="string">' smoothed'</span>])
+0119             axis image off
+0120 
+0121             subplot(2,2,1)
+0122         <span class="keyword">else</span>
+0123             subplot(211)
+0124         <span class="keyword">end</span>
+0125         imagesc(squeeze(ica_filters(j,:,:)))
+0126         title([<span class="string">'IC '</span>,num2str(j),<span class="string">' original'</span>])
+0127         axis image off
+0128 
+0129         colord = lines(k+length(Lbig));
+0130         <span class="keyword">for</span> jj = 1:length(Lbig)
+0131             subplot(223)
+0132             contour(ica_filtersbw(:,:,j), [1,1]*0.5, <span class="string">'color'</span>,colord(jj+k,:),<span class="string">'linewidth'</span>,2)
+0133             hold on
+0134             text(segcentroid(jj+k,1), segcentroid(jj+k,2), num2str(jj+k), <span class="string">'horizontalalignment'</span>,<span class="string">'c'</span>, <span class="string">'verticalalignment'</span>,<span class="string">'m'</span>)
+0135             set(gca, <span class="string">'ydir'</span>,<span class="string">'reverse'</span>,<span class="string">'tickdir'</span>,<span class="string">'out'</span>)
+0136             axis image
+0137             xlim([0,pixw]); ylim([0,pixh])
+0138             
+0139             subplot(224)
+0140             imagesc(squeeze(ica_segments(jj+k,:,:)))
+0141             hold on
+0142             plot(segcentroid(jj+k,1), segcentroid(jj+k,2), <span class="string">'bo'</span>)
+0143             hold off
+0144             axis image off
+0145             title([<span class="string">'Segment '</span>,num2str(jj+k)])
+0146             drawnow
+0147         <span class="keyword">end</span>
+0148     <span class="keyword">end</span>
+0149     k = size(ica_segments,1);
+0150 <span class="keyword">end</span>
+0151 toc</pre></div>
+<hr><address>Generated on Wed 29-Jul-2009 12:46:53 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>

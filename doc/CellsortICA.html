@@ -1,0 +1,233 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of CellsortICA</title>
+  <meta name="keywords" content="CellsortICA">
+  <meta name="description" content="[ica_sig, ica_filters, ica_A, numiter] = CellsortICA(mixedsig, mixedfilters, PCuse, mu, nIC, ica_A_guess, termtol, maxrounds)">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html &copy; 2003 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div>  <a href="index.html">CellSort 1.0</a> &gt; CellsortICA.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="images/left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for CellSort 1.0&nbsp;<img alt=">" border="0" src="images/right.png"></a></td></tr></table>-->
+
+<h1>CellsortICA
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>[ica_sig, ica_filters, ica_A, numiter] = CellsortICA(mixedsig, mixedfilters, PCuse, mu, nIC, ica_A_guess, termtol, maxrounds)</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="box"><strong>function [ica_sig, ica_filters, ica_A, numiter] = CellsortICA(mixedsig,mixedfilters, CovEvals, PCuse, mu, nIC, ica_A_guess, termtol, maxrounds) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre class="comment"> [ica_sig, ica_filters, ica_A, numiter] = CellsortICA(mixedsig, mixedfilters, PCuse, mu, nIC, ica_A_guess, termtol, maxrounds)
+
+CELLSORT
+ Perform ICA with a standard set of parameters, including skewness as the
+ objective function
+
+ Inputs:
+   mixedsig - N x T matrix of N temporal signal mixtures sampled at T
+   points.
+   mixedfilters - N x X x Y array of N spatial signal mixtures sampled at
+   X x Y spatial points.
+   CovEvals - eigenvalues of the covariance matrix
+   PCuse - vector of indices of the components to be included. If empty,
+   use all the components
+   mu - parameter (between 0 and 1) specifying weight of temporal
+   information in spatio-temporal ICA
+   nIC - number of ICs to derive
+   termtol - termination tolerance; fractional change in output at which
+   to end iteration of the fixed point algorithm.
+   maxrounds - maximum number of rounds of iterations
+
+ Outputs:
+     ica_sig - nIC x T matrix of ICA temporal signals
+     ica_filters - nIC x X x Y array of ICA spatial filters
+     ica_A - nIC x N orthogonal unmixing matrix to convert the input to output signals
+     numiter - number of rounds of iteration before termination
+
+ Routine is based on the fastICA package (Hugo Gävert, Jarmo Hurri, Jaakko Särelä, and Aapo
+ Hyvärinen, http://www.cis.hut.fi/projects/ica/fastica)
+
+ Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009
+ Email: eran@post.harvard.edu, mschnitz@stanford.edu</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function [B, iternum] = fpica_standardica(X, nIC, ica_A_guess, termtol, maxrounds)</a></li></ul>
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="images/up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [ica_sig, ica_filters, ica_A, numiter] = CellsortICA(mixedsig, </a><span class="keyword">...</span>
+0002     mixedfilters, CovEvals, PCuse, mu, nIC, ica_A_guess, termtol, maxrounds)
+0003 <span class="comment">% [ica_sig, ica_filters, ica_A, numiter] = CellsortICA(mixedsig, mixedfilters, PCuse, mu, nIC, ica_A_guess, termtol, maxrounds)</span>
+0004 <span class="comment">%</span>
+0005 <span class="comment">%CELLSORT</span>
+0006 <span class="comment">% Perform ICA with a standard set of parameters, including skewness as the</span>
+0007 <span class="comment">% objective function</span>
+0008 <span class="comment">%</span>
+0009 <span class="comment">% Inputs:</span>
+0010 <span class="comment">%   mixedsig - N x T matrix of N temporal signal mixtures sampled at T</span>
+0011 <span class="comment">%   points.</span>
+0012 <span class="comment">%   mixedfilters - N x X x Y array of N spatial signal mixtures sampled at</span>
+0013 <span class="comment">%   X x Y spatial points.</span>
+0014 <span class="comment">%   CovEvals - eigenvalues of the covariance matrix</span>
+0015 <span class="comment">%   PCuse - vector of indices of the components to be included. If empty,</span>
+0016 <span class="comment">%   use all the components</span>
+0017 <span class="comment">%   mu - parameter (between 0 and 1) specifying weight of temporal</span>
+0018 <span class="comment">%   information in spatio-temporal ICA</span>
+0019 <span class="comment">%   nIC - number of ICs to derive</span>
+0020 <span class="comment">%   termtol - termination tolerance; fractional change in output at which</span>
+0021 <span class="comment">%   to end iteration of the fixed point algorithm.</span>
+0022 <span class="comment">%   maxrounds - maximum number of rounds of iterations</span>
+0023 <span class="comment">%</span>
+0024 <span class="comment">% Outputs:</span>
+0025 <span class="comment">%     ica_sig - nIC x T matrix of ICA temporal signals</span>
+0026 <span class="comment">%     ica_filters - nIC x X x Y array of ICA spatial filters</span>
+0027 <span class="comment">%     ica_A - nIC x N orthogonal unmixing matrix to convert the input to output signals</span>
+0028 <span class="comment">%     numiter - number of rounds of iteration before termination</span>
+0029 <span class="comment">%</span>
+0030 <span class="comment">% Routine is based on the fastICA package (Hugo Gävert, Jarmo Hurri, Jaakko Särelä, and Aapo</span>
+0031 <span class="comment">% Hyvärinen, http://www.cis.hut.fi/projects/ica/fastica)</span>
+0032 <span class="comment">%</span>
+0033 <span class="comment">% Eran Mukamel, Axel Nimmerjahn and Mark Schnitzer, 2009</span>
+0034 <span class="comment">% Email: eran@post.harvard.edu, mschnitz@stanford.edu</span>
+0035 
+0036 fprintf(<span class="string">'-------------- CellsortICA %s -------------- \n'</span>, date)
+0037 
+0038 <span class="keyword">if</span> (nargin&lt;4) || isempty(PCuse)
+0039     PCuse = [1:size(mixedsig,1)];
+0040 <span class="keyword">end</span>
+0041 <span class="keyword">if</span> (nargin&lt;6) || isempty(nIC)
+0042     nIC = length(PCuse);
+0043 <span class="keyword">end</span>
+0044 <span class="keyword">if</span> (nargin&lt;7) || isempty(ica_A_guess)
+0045     ica_A_guess = randn(length(PCuse), nIC);
+0046 <span class="keyword">end</span>
+0047 <span class="keyword">if</span> (nargin&lt;8) || isempty(termtol)
+0048     termtol = 1e-6;
+0049 <span class="keyword">end</span>
+0050 <span class="keyword">if</span> (nargin&lt;9) || isempty(maxrounds)
+0051     maxrounds = 100;
+0052 <span class="keyword">end</span>
+0053 <span class="keyword">if</span> isempty(mu)||(mu&gt;1)||(mu&lt;0)
+0054     error(<span class="string">'Spatio-temporal parameter, mu, must be between 0 and 1.'</span>)
+0055 <span class="keyword">end</span>
+0056 
+0057 <span class="comment">% Check that ica_A_guess is the right size</span>
+0058 <span class="keyword">if</span> size(ica_A_guess,1)~= length(PCuse) || size(ica_A_guess,2)~=nIC
+0059     error(<span class="string">'Initial guess for ica_A is the wrong size.'</span>)
+0060 <span class="keyword">end</span>
+0061 <span class="keyword">if</span> nIC&gt;length(PCuse)
+0062     error(<span class="string">'Cannot estimate more ICs than the number of PCs.'</span>)
+0063 <span class="keyword">end</span>
+0064     
+0065 [pixw,pixh] = size(mixedfilters(:,:,1));
+0066 npix = pixw*pixh;
+0067 
+0068 <span class="comment">% Select PCs</span>
+0069 <span class="keyword">if</span> mu &gt; 0 || ~isempty(mixedsig)
+0070     mixedsig = mixedsig(PCuse,:);
+0071 <span class="keyword">end</span>
+0072 <span class="keyword">if</span> mu &lt; 1 || ~isempty(mixedfilters)
+0073     mixedfilters = reshape(mixedfilters(:,:,PCuse),npix,length(PCuse));
+0074 <span class="keyword">end</span>
+0075 CovEvals = CovEvals(PCuse);
+0076 
+0077 <span class="comment">% Center the data by removing the mean of each PC</span>
+0078 mixedmean = mean(mixedsig,2);
+0079 mixedsig = mixedsig - mixedmean * ones(1, size(mixedsig,2));
+0080 
+0081 <span class="comment">% Create concatenated data for spatio-temporal ICA</span>
+0082 nx = size(mixedfilters,1);
+0083 nt = size(mixedsig,2);
+0084 <span class="keyword">if</span> mu == 1
+0085     <span class="comment">% Pure temporal ICA</span>
+0086     sig_use = mixedsig;
+0087 <span class="keyword">elseif</span> mu == 0
+0088     <span class="comment">% Pure spatial ICA</span>
+0089     sig_use = mixedfilters';
+0090 <span class="keyword">else</span>
+0091     <span class="comment">% Spatial-temporal ICA</span>
+0092     sig_use = [(1-mu)*mixedfilters', mu*mixedsig];
+0093     sig_use = sig_use / sqrt(1-2*mu+2*mu^2); <span class="comment">% This normalization ensures that, if both mixedfilters and mixedsig have unit covariance, then so will sig_use</span>
+0094 <span class="keyword">end</span>
+0095 
+0096 <span class="comment">% Perform ICA</span>
+0097 [ica_A, numiter] = <a href="#_sub1" class="code" title="subfunction [B, iternum] = fpica_standardica(X, nIC, ica_A_guess, termtol, maxrounds)">fpica_standardica</a>(sig_use, nIC, ica_A_guess, termtol, maxrounds);
+0098 
+0099 <span class="comment">% Sort ICs according to skewness of the temporal component</span>
+0100 ica_W = ica_A';
+0101 
+0102 ica_sig = ica_W * mixedsig;
+0103 ica_filters = reshape((mixedfilters*diag(CovEvals.^(-1/2))*ica_A)', nIC, nx);  <span class="comment">% This is the matrix of the generators of the ICs</span>
+0104 ica_filters = ica_filters / npix^2;
+0105 
+0106 icskew = skewness(ica_sig');
+0107 [icskew, ICord] = sort(icskew, <span class="string">'descend'</span>);
+0108 ica_A = ica_A(:,ICord);
+0109 ica_sig = ica_sig(ICord,:);
+0110 ica_filters = ica_filters(ICord,:);
+0111 ica_filters = reshape(ica_filters, nIC, pixw, pixh);
+0112 
+0113 <span class="comment">% Note that with these definitions of ica_filters and ica_sig, we can decompose</span>
+0114 <span class="comment">% the sphered and original movie data matrices as:</span>
+0115 <span class="comment">%     mov_sphere ~ mixedfilters * mixedsig = ica_filters * ica_sig = (mixedfilters*ica_A') * (ica_A*mixedsig),</span>
+0116 <span class="comment">%     mov ~ mixedfilters * pca_D * mixedsig.</span>
+0117 <span class="comment">% This gives:</span>
+0118 <span class="comment">%     ica_filters = mixedfilters * ica_A' = mov * mixedsig' * inv(diag(pca_D.^(1/2)) * ica_A'</span>
+0119 <span class="comment">%     ica_sig = ica_A * mixedsig = ica_A * inv(diag(pca_D.^(1/2))) * mixedfilters' * mov</span>
+0120 
+0121     <span class="keyword">function</span> [B, iternum] = <a href="#_sub1" class="code" title="subfunction [B, iternum] = fpica_standardica(X, nIC, ica_A_guess, termtol, maxrounds)">fpica_standardica</a>(X, nIC, ica_A_guess, termtol, maxrounds)
+0122         
+0123         numSamples = size(X,2);
+0124         
+0125         B = ica_A_guess;
+0126         BOld = zeros(size(B));
+0127         
+0128         iternum = 0;
+0129         minAbsCos = 0;
+0130         
+0131         errvec = zeros(maxrounds,1);
+0132         <span class="keyword">while</span> (iternum &lt; maxrounds) &amp;&amp; ((1 - minAbsCos)&gt;termtol)
+0133             iternum = iternum + 1;
+0134             
+0135             <span class="comment">% Symmetric orthogonalization.</span>
+0136             B = (X * ((X' * B) .^ 2)) / numSamples;
+0137             B = B * real(inv(B' * B)^(1/2));
+0138             
+0139             <span class="comment">% Test for termination condition.</span>
+0140             minAbsCos = min(abs(diag(B' * BOld)));
+0141             
+0142             BOld = B;
+0143             errvec(iternum) = (1 - minAbsCos);
+0144         <span class="keyword">end</span>
+0145         
+0146         <span class="keyword">if</span> iternum&lt;maxrounds
+0147             fprintf(<span class="string">'Convergence in %d rounds.\n'</span>, iternum)
+0148         <span class="keyword">else</span>
+0149             fprintf(<span class="string">'Failed to converge; terminating after %d rounds, current change in estimate %3.3g.\n'</span>, <span class="keyword">...</span>
+0150                 iternum, 1-minAbsCos)
+0151         <span class="keyword">end</span>
+0152     <span class="keyword">end</span>
+0153 <span class="keyword">end</span>
+0154</pre></div>
+<hr><address>Generated on Wed 29-Jul-2009 12:46:53 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/">m2html</a></strong> &copy; 2003</address>
+</body>
+</html>
