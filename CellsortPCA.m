@@ -36,7 +36,7 @@ function [mixedsig, mixedfilters, CovEvals, covtrace, movm, ...
 %
 
 %
-% June 2016 (Cellsort 1.4): Fixed an inconsistency between create_tcov and
+% June-August 2016 (Cellsort 1.41): Fixed an inconsistency between create_tcov and
 % creat_xcov. In the current version, both methods agree with the previous
 % version of create_tcov.
 %
@@ -76,16 +76,7 @@ if outputdir(end)~='/';
     outputdir = [outputdir, '/'];
 end
 
-% Downsampling
-if length(dsamp)==1
-    dsamp_time = dsamp(1);
-    dsamp_space = 1;
-else
-    dsamp_time = dsamp(1);
-    dsamp_space = dsamp(2); % Spatial downsample
-end
-
-[fpath, fname] = fileparts(fn);
+[~, fname] = fileparts(fn);
 if isempty(badframes)
     fnmat = [outputdir, fname, '_',num2str(flims(1)),',',num2str(flims(2)), '_', date,'.mat'];
 else
@@ -101,48 +92,39 @@ if ~isempty(dir(fnmat))
     end
 end
 
-fncovmat = [outputdir, fname, '_cov_', num2str(flims(1)), ',', num2str(flims(2)), '_', date,'.mat'];
-
 [pixw,pixh] = size(imread(fn,1));
 npix = pixw*pixh;
 
 fprintf('   %d pixels x %d time frames;', npix, nt)
-if nt<npix
-    fprintf(' using temporal covariance matrix.\n')
-else
-    fprintf(' using spatial covariance matrix.\n')
-end
 
 % Create covariance matrix
-if nt < npix
+if nt < npix 
+    fprintf(' using temporal covariance matrix.\n')
     [covmat, mov, movm, movtm] = create_tcov(fn, pixw, pixh, useframes, nt, dsamp);
 else
+    fprintf(' using spatial covariance matrix.\n')
     [covmat, mov, movm, movtm] = create_xcov(fn, pixw, pixh, useframes, nt, dsamp);
 end
 
 covtrace = trace(covmat) / npix;
 movm = reshape(movm, pixw, pixh);
 
-if nt < npix
+if nt < npix 
     % Perform SVD on temporal covariance
-    [mixedsig, CovEvals, percentvar] = cellsort_svd(covmat, nPCs, nt, npix);
+    [mixedsig, CovEvals] = cellsort_svd(covmat, nPCs, nt, npix);
 
     % Load the other set of principal components
     [mixedfilters] = reload_moviedata(pixw*pixh, mov, mixedsig, CovEvals);
 else
     % Perform SVD on spatial components
-    [mixedfilters, CovEvals, percentvar] = cellsort_svd(covmat, nPCs, nt, npix);
-
+    [mixedfilters, CovEvals] = cellsort_svd(covmat, nPCs, nt, npix);
+    mixedfilters = mixedfilters' * npix;
+    
     % Load the other set of principal components
-    [mixedsig] = reload_moviedata(nt, mov', mixedfilters, CovEvals);
+    [mixedsig] = reload_moviedata(nt, mov', mixedfilters', CovEvals);
+    mixedsig = mixedsig' / npix^2;
 end
 mixedfilters = reshape(mixedfilters, pixw,pixh,nPCs);
-
-firstframe_full = imread(fn,1);
-firstframe = firstframe_full;
-if dsamp_space>1
-    firstframe = imresize(firstframe, size(mov(:,:,1)),'bilinear');
-end
 
 %------------
 % Save the output data
@@ -155,7 +137,7 @@ toc
         %-----------------------
         % Load movie data to compute the spatial covariance matrix
 
-        npix = pixw*pixh;
+        npix1 = pixw*pixh;
 
         % Downsampling
         if length(dsamp)==1
@@ -191,7 +173,7 @@ toc
 
         fprintf(' Read frame %4.0f out of %4.0f; ', jjind, nt)
         toc
-        mov = reshape(mov, npix, nt);
+        mov = reshape(mov, npix1, nt);
 
         % DFoF normalization of each pixel
         movm = mean(mov,2); % Average over time
@@ -216,7 +198,7 @@ toc
     function [covmat, mov, movm, movtm] = create_tcov(fn, pixw, pixh, useframes, nt, dsamp)
         %-----------------------
         % Load movie data to compute the temporal covariance matrix
-        npix = pixw*pixh;
+        npix1 = pixw*pixh;
 
         % Downsampling
         if length(dsamp)==1
@@ -252,7 +234,7 @@ toc
 
         fprintf(' Read frame %4.0f out of %4.0f; ', jjind, nt)
         toc
-        mov = reshape(mov, npix, nt);
+        mov = reshape(mov, npix1, nt);
 
         % DFoF normalization of each pixel
         movm = mean(mov,2); % Average over time
@@ -266,17 +248,17 @@ toc
             mov = downsample(mov', dsamp)';
         end
 
-        c1 = (mov'*mov)/npix;
+        c1 = (mov'*mov)/npix1;
         movtm = mean(mov,1); % Average over space
         covmat = c1 - movtm'*movtm;
         clear c1
     end
 
-    function [mixedsig, CovEvals, percentvar] = cellsort_svd(covmat, nPCs, nt, npix)
+    function [mixedsig, CovEvals, percentvar] = cellsort_svd(covmat, nPCs, nt, npix1)
         %-----------------------
         % Perform SVD
 
-        covtrace = trace(covmat) / npix;
+        covtrace1 = trace(covmat) / npix1;
 
         opts.disp = 0;
         opts.issym = 'true';
@@ -296,22 +278,22 @@ toc
         end
 
         mixedsig = mixedsig' * nt;
-        CovEvals = CovEvals / npix;
+        CovEvals = CovEvals / npix1;
 
-        percentvar = 100*sum(CovEvals)/covtrace;
+        percentvar = 100*sum(CovEvals)/covtrace1;
         fprintf([' First ',num2str(nPCs),' PCs contain ',num2str(percentvar,3),'%% of the variance.\n'])
     end
 
-    function [mixedfilters] = reload_moviedata(npix, mov, mixedsig, CovEvals)
+    function [mixedfilters] = reload_moviedata(npix1, mov, mixedsig, CovEvals)
         %-----------------------
         % Re-load movie data
-        nPCs = size(mixedsig,1);
+        nPCs1 = size(mixedsig,1);
 
         Sinv = inv(diag(CovEvals.^(1/2)));
 
-        movtm = mean(mov,1); % Average over space
-        movuse = mov - ones(npix,1) * movtm;
-        mixedfilters = reshape(movuse * mixedsig' * Sinv, npix, nPCs);
+        movtm1 = mean(mov,1); % Average over space
+        movuse = mov - ones(npix1,1) * movtm1;
+        mixedfilters = reshape(movuse * mixedsig' * Sinv, npix1, nPCs1);
     end
 
     function j = tiff_frames(fn)
