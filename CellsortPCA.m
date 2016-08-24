@@ -53,6 +53,9 @@ if (nargin<2)||(isempty(flims))
     nt_full = tiff_frames(fn);
     flims = [1,nt_full];
 end
+if nargin<6
+    badframes = [];
+end
 
 useframes = setdiff((flims(1):flims(2)), badframes);
 nt = length(useframes);
@@ -65,9 +68,6 @@ if nargin<4 || isempty(dsamp)
 end
 if nargin<5 || isempty(outputdir)
     outputdir = [pwd,'/cellsort_preprocessed_data/'];
-end
-if nargin<6
-    badframes = [];
 end
 if isempty(dir(outputdir))
     mkdir(pwd, '/cellsort_preprocessed_data/')
