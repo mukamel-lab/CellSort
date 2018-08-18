@@ -2,7 +2,8 @@ CellSort 1.1
 
 Independent Component Analysis for Optical Imaging Data Sets
 
-Copyright Eran Mukamel, 2009 email: eran@post.harvard.edu
+Copyright Eran Mukamel, 2009 
+email: emukamel@ucsd.edu
 
 INSTALLATION ---------------------- 
 Add the folder "CellSort 1.1" to the MATLAB path by 
